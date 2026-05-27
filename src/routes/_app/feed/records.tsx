@@ -5,8 +5,11 @@ import { ComingSoon } from "@/shared/components/ui/ComingSoon";
 export const Route = createFileRoute("/_app/feed/records")({
   component: () => (
     <div>
-      <PageHeader title="Feed Records" description="Daily feed events logged per animal." />
-      <ComingSoon title="Feed log table" description="Will surface feed_records joined with feed_types and animals." />
+      <PageHeader title="Feed Records" description="Daily feeding events and animal allocations." />
+      <ComingSoon
+        title="Feeding event table"
+        description="Will surface feeding_events joined with feed types, pens, and per-animal allocations."
+      />
     </div>
   ),
 });

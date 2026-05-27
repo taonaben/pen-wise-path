@@ -1,6 +1,13 @@
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { getSpeciesConfig } from "../config/speciesConfig";
-import type { AnimalPerformance, WeightRecord } from "../types/animal.types";
+import type {
+  AnimalDetailMetrics,
+  AnimalFeedAllocationViewModel,
+  AnimalPerformance,
+  AnimalProjection,
+  AnimalViewModel,
+  WeightRecord,
+} from "../types/animal.types";
 
 export function toNumber(value: number | string | null | undefined): number {
   const parsed = Number(value ?? 0);
@@ -51,4 +58,49 @@ export function getSellingRecommendation(
   if (daysToIdeal <= 0) return "Ready for sale";
 
   return `Sell in ${daysToIdeal} days`;
+}
+
+export function calculateAnimalDetailMetrics(
+  animal: AnimalViewModel,
+  weightRecords: WeightRecord[],
+  feedAllocations: AnimalFeedAllocationViewModel[],
+): AnimalDetailMetrics {
+  const currentWeightKg = animal.currentWeightKg;
+  const startingWeightKg = animal.purchaseWeightKg;
+  const totalGainKg = Math.max((currentWeightKg ?? startingWeightKg) - startingWeightKg, 0);
+  const averageDailyGainKg = calculateAverageDailyGain(weightRecords) ?? animal.averageDailyGainKg;
+  const totalFeedConsumedKg = feedAllocations.reduce(
+    (total, allocation) => total + allocation.allocatedQuantityKg,
+    0,
+  );
+  const totalFeedCost = feedAllocations.reduce(
+    (total, allocation) => total + allocation.allocatedCost,
+    0,
+  );
+
+  return {
+    currentWeightKg,
+    startingWeightKg,
+    totalGainKg,
+    averageDailyGainKg,
+    totalFeedConsumedKg,
+    totalFeedCost,
+    feedConversionRatio: totalGainKg > 0 ? totalFeedConsumedKg / totalGainKg : null,
+    feedCostPerKgGained: totalGainKg > 0 ? totalFeedCost / totalGainKg : null,
+    estimatedMargin: null,
+  };
+}
+
+export function buildAnimalProjections(animal: AnimalViewModel): AnimalProjection[] {
+  const days = [7, 14, 30];
+  const currentWeight = animal.currentWeightKg;
+  const adg = animal.averageDailyGainKg;
+
+  return days.map((dayCount) => ({
+    label: `${dayCount}-day`,
+    days: dayCount,
+    projectedWeightKg:
+      currentWeight !== null && adg !== null ? currentWeight + adg * dayCount : null,
+    projectedGainKg: adg !== null ? adg * dayCount : null,
+  }));
 }

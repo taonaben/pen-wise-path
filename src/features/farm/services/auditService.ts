@@ -81,4 +81,41 @@ export const auditService = {
       mapAuditLog(log, log.user_id ? profilesById.get(log.user_id) : undefined),
     );
   },
+
+  async getAuditLogsForEntity(args: {
+    farmId: string;
+    entityType: string;
+    entityId: string;
+  }): Promise<AuditLogViewModel[]> {
+    const { data, error } = await db
+      .from("audit_logs")
+      .select("*")
+      .eq("farm_id", args.farmId)
+      .eq("entity_type", args.entityType)
+      .eq("entity_id", args.entityId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (error) handleSupabaseError(error);
+
+    const logs = (data ?? []) as AuditLog[];
+    const actorIds = [...new Set(logs.map((log) => log.user_id).filter(Boolean))] as string[];
+    const profilesById = new Map<string, Profile>();
+
+    if (actorIds.length > 0) {
+      const { data: profiles, error: profileError } = await db
+        .from("profiles")
+        .select("*")
+        .in("id", actorIds);
+
+      if (profileError) handleSupabaseError(profileError);
+      for (const profile of (profiles ?? []) as Profile[]) {
+        profilesById.set(profile.id, profile);
+      }
+    }
+
+    return logs.map((log) =>
+      mapAuditLog(log, log.user_id ? profilesById.get(log.user_id) : undefined),
+    );
+  },
 };

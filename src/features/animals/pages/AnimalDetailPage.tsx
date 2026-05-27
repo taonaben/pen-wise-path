@@ -1,22 +1,45 @@
+import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { PlaceholderLineChart } from "@/shared/components/charts/PlaceholderLineChart";
-import { PageHeader } from "@/shared/components/ui/PageHeader";
-import { StatCard } from "@/shared/components/ui/StatCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
-import { GrowthStatusBadge } from "../components/GrowthStatusBadge";
-import { SpeciesBadge } from "../components/SpeciesBadge";
+import { AnimalActivityTab } from "../components/detail/AnimalActivityTab";
+import { AnimalDetailHeader } from "../components/detail/AnimalDetailHeader";
+import { AnimalFeedingTab } from "../components/detail/AnimalFeedingTab";
+import { AnimalHealthTab } from "../components/detail/AnimalHealthTab";
+import { AnimalOverviewTab } from "../components/detail/AnimalOverviewTab";
+import { AnimalPredictionsTab } from "../components/detail/AnimalPredictionsTab";
+import { AnimalWeightTab } from "../components/detail/AnimalWeightTab";
 import { useAnimal } from "../hooks/useAnimal";
-
-function formatValue(value: number | null | undefined, suffix: string) {
-  if (value === null || value === undefined || Number.isNaN(value)) return "-";
-  return `${value.toFixed(2)} ${suffix}`;
-}
+import { useAnimalAlerts } from "../hooks/useAnimalAlerts";
+import { useAnimalAuditLogs } from "../hooks/useAnimalAuditLogs";
+import { useAnimalFeedAllocations } from "../hooks/useAnimalFeedAllocations";
+import { useAnimalHealthEvents } from "../hooks/useAnimalHealthEvents";
+import { useAnimalPen } from "../hooks/useAnimalPen";
+import { useAnimalWeights } from "../hooks/useAnimalWeights";
+import { calculateAnimalDetailMetrics } from "../services/animalAnalyticsService";
 
 export function AnimalDetailPage({ animalId }: { animalId: string }) {
   const { currentFarm } = useCurrentFarm();
   const animalQuery = useAnimal(currentFarm.id, animalId);
+  const weightQuery = useAnimalWeights(currentFarm.id, animalId);
+  const feedQuery = useAnimalFeedAllocations(currentFarm.id, animalId);
+  const healthQuery = useAnimalHealthEvents(currentFarm.id, animalId);
+  const alertQuery = useAnimalAlerts(currentFarm.id, animalId);
+  const auditQuery = useAnimalAuditLogs(currentFarm.id, animalId);
+  const penQuery = useAnimalPen(currentFarm.id, animalId);
   const animal = animalQuery.data;
+
+  const weightRecords = useMemo(() => weightQuery.data ?? [], [weightQuery.data]);
+  const feedAllocations = useMemo(() => feedQuery.data ?? [], [feedQuery.data]);
+  const healthEvents = healthQuery.data ?? [];
+  const alerts = alertQuery.data ?? [];
+  const auditLogs = auditQuery.data ?? [];
+
+  const metrics = useMemo(() => {
+    if (!animal) return null;
+    return calculateAnimalDetailMetrics(animal, weightRecords, feedAllocations);
+  }, [animal, feedAllocations, weightRecords]);
 
   return (
     <div className="space-y-5">
@@ -28,51 +51,74 @@ export function AnimalDetailPage({ animalId }: { animalId: string }) {
       </Link>
 
       {animalQuery.isLoading && (
-        <div className="rounded-2xl border bg-farm-800/80 p-6 text-sm text-farm-muted">
+        <div className="rounded-xl border bg-farm-800/80 p-6 text-sm text-farm-muted">
           Loading animal...
         </div>
       )}
 
       {animalQuery.isError && (
-        <div className="rounded-2xl border border-farm-danger/30 bg-farm-danger/10 p-6 text-sm text-farm-danger">
+        <div className="rounded-xl border border-farm-danger/30 bg-farm-danger/10 p-6 text-sm text-farm-danger">
           Animal could not be loaded.
         </div>
       )}
 
-      {animal && (
+      {animal && metrics && (
         <>
-          <PageHeader
-            title={animal.tagNumber}
-            description={`${animal.speciesLabel} - ${animal.breedLabel} - ${animal.sex ?? "Unspecified"}`}
+          <AnimalDetailHeader
+            animal={animal}
+            farmName={currentFarm.name}
+            currentPen={penQuery.data}
           />
 
-          <div className="flex flex-wrap gap-2">
-            <SpeciesBadge label={animal.speciesLabel} />
-            <GrowthStatusBadge performance={animal.performance} />
-          </div>
+          <Tabs defaultValue="overview" className="space-y-5">
+            <div className="overflow-x-auto">
+              <TabsList className="h-auto min-w-max justify-start bg-farm-900/70 p-1">
+                {["Overview", "Weight", "Feeding", "Health", "Predictions", "Activity"].map(
+                  (tab) => (
+                    <TabsTrigger
+                      key={tab}
+                      value={tab.toLowerCase()}
+                      className="data-[state=active]:bg-farm-700 data-[state=active]:text-foreground"
+                    >
+                      {tab}
+                    </TabsTrigger>
+                  ),
+                )}
+              </TabsList>
+            </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
-            <StatCard title="Current Weight" value={formatValue(animal.currentWeightKg, "kg")} />
-            <StatCard
-              title="Average Daily Gain"
-              value={formatValue(animal.averageDailyGainKg, "kg/d")}
-            />
-            <StatCard title="Source" value={animal.acquisitionLabel} />
-            <StatCard title="Starting Weight" value={formatValue(animal.purchaseWeightKg, "kg")} />
-            <StatCard title="Initial Value" value={`$${animal.purchasePrice.toFixed(2)}`} />
-            <StatCard
-              title="Selling Recommendation"
-              value={animal.recommendation}
-              variant="success"
-            />
-          </div>
+            <TabsContent value="overview">
+              <AnimalOverviewTab animal={animal} metrics={metrics} alerts={alerts} />
+            </TabsContent>
 
-          <div className="rounded-2xl border bg-farm-800/80 p-5">
-            <h2 className="text-base font-semibold">Notes</h2>
-            <p className="mt-2 text-sm text-farm-muted">{animal.notes || "No notes recorded."}</p>
-          </div>
+            <TabsContent value="weight">
+              <AnimalWeightTab
+                records={weightRecords}
+                metrics={metrics}
+                isLoading={weightQuery.isLoading}
+              />
+            </TabsContent>
 
-          <PlaceholderLineChart title="Weight Over Time" />
+            <TabsContent value="feeding">
+              <AnimalFeedingTab
+                allocations={feedAllocations}
+                metrics={metrics}
+                isLoading={feedQuery.isLoading}
+              />
+            </TabsContent>
+
+            <TabsContent value="health">
+              <AnimalHealthTab events={healthEvents} isLoading={healthQuery.isLoading} />
+            </TabsContent>
+
+            <TabsContent value="predictions">
+              <AnimalPredictionsTab animal={animal} />
+            </TabsContent>
+
+            <TabsContent value="activity">
+              <AnimalActivityTab logs={auditLogs} isLoading={auditQuery.isLoading} />
+            </TabsContent>
+          </Tabs>
         </>
       )}
     </div>
