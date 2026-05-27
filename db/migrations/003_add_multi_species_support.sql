@@ -66,6 +66,21 @@ on conflict (species_id, slug) do update set
 alter table public.animals add column if not exists species_id uuid;
 alter table public.animals add column if not exists breed_id uuid;
 alter table public.animals add column if not exists metadata jsonb not null default '{}'::jsonb;
+alter table public.animals add column if not exists acquisition_method text not null default 'purchased';
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'animals_acquisition_method_check'
+      and conrelid = 'public.animals'::regclass
+  ) then
+    alter table public.animals
+      add constraint animals_acquisition_method_check
+      check (acquisition_method in ('purchased', 'bred_in_house'));
+  end if;
+end $$;
 
 update public.animals a
 set species_id = s.id
@@ -117,6 +132,7 @@ create index if not exists idx_animal_breeds_species_id on public.animal_breeds(
 create index if not exists idx_animal_breeds_active_slug on public.animal_breeds(is_active, slug);
 create index if not exists idx_animals_species_id on public.animals(species_id);
 create index if not exists idx_animals_breed_id on public.animals(breed_id);
+create index if not exists idx_animals_acquisition_method on public.animals(acquisition_method);
 
 grant select on public.animal_species to authenticated;
 grant select on public.animal_breeds to authenticated;

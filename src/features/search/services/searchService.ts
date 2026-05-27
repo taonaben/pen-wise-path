@@ -14,6 +14,8 @@ type AnimalSearchRow = {
   status: string;
   notes: string | null;
   purchase_weight_kg: number | string | null;
+  species: { name: string; slug: string } | null;
+  breed_record: { name: string; slug: string } | null;
 };
 
 type AlertSearchRow = {
@@ -53,33 +55,55 @@ function cap(results: SearchResult[], limit: number) {
 async function searchAnimals(args: GlobalSearchArgs): Promise<SearchResult[]> {
   if (!args.permissions.viewAnimals) return [];
 
-  const pattern = `%${args.query}%`;
   const { data, error } = await db
     .from("animals")
-    .select("id, tag_number, breed, status, notes, purchase_weight_kg")
-    .eq("farm_id", args.farmId)
-    .or(
-      `tag_number.ilike.${pattern},breed.ilike.${pattern},status.ilike.${pattern},notes.ilike.${pattern}`,
+    .select(
+      `
+        id,
+        tag_number,
+        breed,
+        status,
+        notes,
+        purchase_weight_kg,
+        species:animal_species!animals_species_id_fkey(name, slug),
+        breed_record:animal_breeds!animals_breed_id_fkey(name, slug)
+      `,
     )
-    .limit(args.limit ?? 5);
+    .eq("farm_id", args.farmId)
+    .limit(100);
 
   if (error) handleSupabaseError(error);
 
-  return ((data ?? []) as AnimalSearchRow[]).map((animal) => ({
-    id: animal.id,
-    type: "animal",
-    group: "Animals",
-    title: animal.tag_number,
-    subtitle: [
-      animal.breed,
-      animal.status,
-      animal.purchase_weight_kg ? `${animal.purchase_weight_kg}kg` : null,
-    ]
-      .filter(Boolean)
-      .join(" - "),
-    path: `/animals/${animal.id}`,
-    metadata: animal,
-  }));
+  return cap(
+    ((data ?? []) as AnimalSearchRow[])
+      .filter((animal) =>
+        [
+          animal.tag_number,
+          animal.breed,
+          animal.breed_record?.name,
+          animal.species?.name,
+          animal.status,
+          animal.notes,
+        ].some((value) => contains(value, args.query)),
+      )
+      .map((animal) => ({
+        id: animal.id,
+        type: "animal",
+        group: "Animals",
+        title: animal.tag_number,
+        subtitle: [
+          animal.species?.name,
+          animal.breed_record?.name ?? animal.breed,
+          animal.status,
+          animal.purchase_weight_kg ? `${animal.purchase_weight_kg}kg` : null,
+        ]
+          .filter(Boolean)
+          .join(" - "),
+        path: `/animals/${animal.id}`,
+        metadata: animal,
+      })),
+    args.limit ?? 5,
+  );
 }
 
 async function searchMembers(args: GlobalSearchArgs): Promise<SearchResult[]> {

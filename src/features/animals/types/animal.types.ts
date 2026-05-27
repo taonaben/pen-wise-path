@@ -1,6 +1,7 @@
 export type AnimalSex = "male" | "female";
 export type AnimalStatus = "active" | "sold" | "sick" | "removed" | "dead";
 export type AnimalPerformance = "Critical" | "Underperforming" | "Normal" | "Excellent" | "Unknown";
+export type AnimalAcquisitionMethod = "purchased" | "bred_in_house";
 
 export type AnimalSpecies = {
   id: string;
@@ -34,6 +35,7 @@ export type Animal = {
   purchase_date: string;
   purchase_weight_kg: number | string;
   purchase_price: number | string;
+  acquisition_method: AnimalAcquisitionMethod;
   status: AnimalStatus;
   notes: string | null;
   metadata: Record<string, unknown>;
@@ -73,6 +75,7 @@ export type AnimalCreatePayload = {
   breedId?: string | null;
   tagNumber: string;
   sex: AnimalSex;
+  acquisitionMethod: AnimalAcquisitionMethod;
   purchaseDate: string;
   purchaseWeightKg: number;
   purchasePrice: number;
@@ -98,6 +101,8 @@ export type AnimalViewModel = {
   sex: AnimalSex | null;
   status: AnimalStatus;
   statusLabel: string;
+  acquisitionMethod: AnimalAcquisitionMethod;
+  acquisitionLabel: string;
   purchaseWeightKg: number;
   purchasePrice: number;
   purchaseDate: string;
