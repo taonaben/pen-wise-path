@@ -9,38 +9,293 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppAnimalsIndexRouteImport } from './routes/_app/animals/index'
+import { Route as AppReportsProfitabilityRouteImport } from './routes/_app/reports/profitability'
+import { Route as AppReportsPerformanceRouteImport } from './routes/_app/reports/performance'
+import { Route as AppReportsFeedCostRouteImport } from './routes/_app/reports/feed-cost'
+import { Route as AppMarketSalesRouteImport } from './routes/_app/market/sales'
+import { Route as AppMarketPricesRouteImport } from './routes/_app/market/prices'
+import { Route as AppMarketPredictionsRouteImport } from './routes/_app/market/predictions'
+import { Route as AppFeedTypesRouteImport } from './routes/_app/feed/types'
+import { Route as AppFeedRecordsRouteImport } from './routes/_app/feed/records'
+import { Route as AppFeedAnalysisRouteImport } from './routes/_app/feed/analysis'
+import { Route as AppFarmProfileRouteImport } from './routes/_app/farm/profile'
+import { Route as AppFarmMembersRouteImport } from './routes/_app/farm/members'
+import { Route as AppFarmAuditLogsRouteImport } from './routes/_app/farm/audit-logs'
+import { Route as AppAnimalsWeightsRouteImport } from './routes/_app/animals/weights'
+import { Route as AppAnimalsAlertsRouteImport } from './routes/_app/animals/alerts'
+import { Route as AppAnimalsIdRouteImport } from './routes/_app/animals/$id'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAnimalsIndexRoute = AppAnimalsIndexRouteImport.update({
+  id: '/animals/',
+  path: '/animals/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportsProfitabilityRoute = AppReportsProfitabilityRouteImport.update({
+  id: '/reports/profitability',
+  path: '/reports/profitability',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportsPerformanceRoute = AppReportsPerformanceRouteImport.update({
+  id: '/reports/performance',
+  path: '/reports/performance',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportsFeedCostRoute = AppReportsFeedCostRouteImport.update({
+  id: '/reports/feed-cost',
+  path: '/reports/feed-cost',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMarketSalesRoute = AppMarketSalesRouteImport.update({
+  id: '/market/sales',
+  path: '/market/sales',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMarketPricesRoute = AppMarketPricesRouteImport.update({
+  id: '/market/prices',
+  path: '/market/prices',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMarketPredictionsRoute = AppMarketPredictionsRouteImport.update({
+  id: '/market/predictions',
+  path: '/market/predictions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFeedTypesRoute = AppFeedTypesRouteImport.update({
+  id: '/feed/types',
+  path: '/feed/types',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFeedRecordsRoute = AppFeedRecordsRouteImport.update({
+  id: '/feed/records',
+  path: '/feed/records',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFeedAnalysisRoute = AppFeedAnalysisRouteImport.update({
+  id: '/feed/analysis',
+  path: '/feed/analysis',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFarmProfileRoute = AppFarmProfileRouteImport.update({
+  id: '/farm/profile',
+  path: '/farm/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFarmMembersRoute = AppFarmMembersRouteImport.update({
+  id: '/farm/members',
+  path: '/farm/members',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFarmAuditLogsRoute = AppFarmAuditLogsRouteImport.update({
+  id: '/farm/audit-logs',
+  path: '/farm/audit-logs',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAnimalsWeightsRoute = AppAnimalsWeightsRouteImport.update({
+  id: '/animals/weights',
+  path: '/animals/weights',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAnimalsAlertsRoute = AppAnimalsAlertsRouteImport.update({
+  id: '/animals/alerts',
+  path: '/animals/alerts',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAnimalsIdRoute = AppAnimalsIdRouteImport.update({
+  id: '/animals/$id',
+  path: '/animals/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/settings': typeof AppSettingsRoute
+  '/animals/$id': typeof AppAnimalsIdRoute
+  '/animals/alerts': typeof AppAnimalsAlertsRoute
+  '/animals/weights': typeof AppAnimalsWeightsRoute
+  '/farm/audit-logs': typeof AppFarmAuditLogsRoute
+  '/farm/members': typeof AppFarmMembersRoute
+  '/farm/profile': typeof AppFarmProfileRoute
+  '/feed/analysis': typeof AppFeedAnalysisRoute
+  '/feed/records': typeof AppFeedRecordsRoute
+  '/feed/types': typeof AppFeedTypesRoute
+  '/market/predictions': typeof AppMarketPredictionsRoute
+  '/market/prices': typeof AppMarketPricesRoute
+  '/market/sales': typeof AppMarketSalesRoute
+  '/reports/feed-cost': typeof AppReportsFeedCostRoute
+  '/reports/performance': typeof AppReportsPerformanceRoute
+  '/reports/profitability': typeof AppReportsProfitabilityRoute
+  '/animals/': typeof AppAnimalsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/settings': typeof AppSettingsRoute
+  '/animals/$id': typeof AppAnimalsIdRoute
+  '/animals/alerts': typeof AppAnimalsAlertsRoute
+  '/animals/weights': typeof AppAnimalsWeightsRoute
+  '/farm/audit-logs': typeof AppFarmAuditLogsRoute
+  '/farm/members': typeof AppFarmMembersRoute
+  '/farm/profile': typeof AppFarmProfileRoute
+  '/feed/analysis': typeof AppFeedAnalysisRoute
+  '/feed/records': typeof AppFeedRecordsRoute
+  '/feed/types': typeof AppFeedTypesRoute
+  '/market/predictions': typeof AppMarketPredictionsRoute
+  '/market/prices': typeof AppMarketPricesRoute
+  '/market/sales': typeof AppMarketSalesRoute
+  '/reports/feed-cost': typeof AppReportsFeedCostRoute
+  '/reports/performance': typeof AppReportsPerformanceRoute
+  '/reports/profitability': typeof AppReportsProfitabilityRoute
+  '/animals': typeof AppAnimalsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/settings': typeof AppSettingsRoute
+  '/_app/animals/$id': typeof AppAnimalsIdRoute
+  '/_app/animals/alerts': typeof AppAnimalsAlertsRoute
+  '/_app/animals/weights': typeof AppAnimalsWeightsRoute
+  '/_app/farm/audit-logs': typeof AppFarmAuditLogsRoute
+  '/_app/farm/members': typeof AppFarmMembersRoute
+  '/_app/farm/profile': typeof AppFarmProfileRoute
+  '/_app/feed/analysis': typeof AppFeedAnalysisRoute
+  '/_app/feed/records': typeof AppFeedRecordsRoute
+  '/_app/feed/types': typeof AppFeedTypesRoute
+  '/_app/market/predictions': typeof AppMarketPredictionsRoute
+  '/_app/market/prices': typeof AppMarketPricesRoute
+  '/_app/market/sales': typeof AppMarketSalesRoute
+  '/_app/reports/feed-cost': typeof AppReportsFeedCostRoute
+  '/_app/reports/performance': typeof AppReportsPerformanceRoute
+  '/_app/reports/profitability': typeof AppReportsProfitabilityRoute
+  '/_app/animals/': typeof AppAnimalsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/dashboard'
+    | '/settings'
+    | '/animals/$id'
+    | '/animals/alerts'
+    | '/animals/weights'
+    | '/farm/audit-logs'
+    | '/farm/members'
+    | '/farm/profile'
+    | '/feed/analysis'
+    | '/feed/records'
+    | '/feed/types'
+    | '/market/predictions'
+    | '/market/prices'
+    | '/market/sales'
+    | '/reports/feed-cost'
+    | '/reports/performance'
+    | '/reports/profitability'
+    | '/animals/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/dashboard'
+    | '/settings'
+    | '/animals/$id'
+    | '/animals/alerts'
+    | '/animals/weights'
+    | '/farm/audit-logs'
+    | '/farm/members'
+    | '/farm/profile'
+    | '/feed/analysis'
+    | '/feed/records'
+    | '/feed/types'
+    | '/market/predictions'
+    | '/market/prices'
+    | '/market/sales'
+    | '/reports/feed-cost'
+    | '/reports/performance'
+    | '/reports/profitability'
+    | '/animals'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/login'
+    | '/_app/dashboard'
+    | '/_app/settings'
+    | '/_app/animals/$id'
+    | '/_app/animals/alerts'
+    | '/_app/animals/weights'
+    | '/_app/farm/audit-logs'
+    | '/_app/farm/members'
+    | '/_app/farm/profile'
+    | '/_app/feed/analysis'
+    | '/_app/feed/records'
+    | '/_app/feed/types'
+    | '/_app/market/predictions'
+    | '/_app/market/prices'
+    | '/_app/market/sales'
+    | '/_app/reports/feed-cost'
+    | '/_app/reports/performance'
+    | '/_app/reports/profitability'
+    | '/_app/animals/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +303,183 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/animals/': {
+      id: '/_app/animals/'
+      path: '/animals'
+      fullPath: '/animals/'
+      preLoaderRoute: typeof AppAnimalsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reports/profitability': {
+      id: '/_app/reports/profitability'
+      path: '/reports/profitability'
+      fullPath: '/reports/profitability'
+      preLoaderRoute: typeof AppReportsProfitabilityRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reports/performance': {
+      id: '/_app/reports/performance'
+      path: '/reports/performance'
+      fullPath: '/reports/performance'
+      preLoaderRoute: typeof AppReportsPerformanceRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reports/feed-cost': {
+      id: '/_app/reports/feed-cost'
+      path: '/reports/feed-cost'
+      fullPath: '/reports/feed-cost'
+      preLoaderRoute: typeof AppReportsFeedCostRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/market/sales': {
+      id: '/_app/market/sales'
+      path: '/market/sales'
+      fullPath: '/market/sales'
+      preLoaderRoute: typeof AppMarketSalesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/market/prices': {
+      id: '/_app/market/prices'
+      path: '/market/prices'
+      fullPath: '/market/prices'
+      preLoaderRoute: typeof AppMarketPricesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/market/predictions': {
+      id: '/_app/market/predictions'
+      path: '/market/predictions'
+      fullPath: '/market/predictions'
+      preLoaderRoute: typeof AppMarketPredictionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/feed/types': {
+      id: '/_app/feed/types'
+      path: '/feed/types'
+      fullPath: '/feed/types'
+      preLoaderRoute: typeof AppFeedTypesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/feed/records': {
+      id: '/_app/feed/records'
+      path: '/feed/records'
+      fullPath: '/feed/records'
+      preLoaderRoute: typeof AppFeedRecordsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/feed/analysis': {
+      id: '/_app/feed/analysis'
+      path: '/feed/analysis'
+      fullPath: '/feed/analysis'
+      preLoaderRoute: typeof AppFeedAnalysisRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/farm/profile': {
+      id: '/_app/farm/profile'
+      path: '/farm/profile'
+      fullPath: '/farm/profile'
+      preLoaderRoute: typeof AppFarmProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/farm/members': {
+      id: '/_app/farm/members'
+      path: '/farm/members'
+      fullPath: '/farm/members'
+      preLoaderRoute: typeof AppFarmMembersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/farm/audit-logs': {
+      id: '/_app/farm/audit-logs'
+      path: '/farm/audit-logs'
+      fullPath: '/farm/audit-logs'
+      preLoaderRoute: typeof AppFarmAuditLogsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/animals/weights': {
+      id: '/_app/animals/weights'
+      path: '/animals/weights'
+      fullPath: '/animals/weights'
+      preLoaderRoute: typeof AppAnimalsWeightsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/animals/alerts': {
+      id: '/_app/animals/alerts'
+      path: '/animals/alerts'
+      fullPath: '/animals/alerts'
+      preLoaderRoute: typeof AppAnimalsAlertsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/animals/$id': {
+      id: '/_app/animals/$id'
+      path: '/animals/$id'
+      fullPath: '/animals/$id'
+      preLoaderRoute: typeof AppAnimalsIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppAnimalsIdRoute: typeof AppAnimalsIdRoute
+  AppAnimalsAlertsRoute: typeof AppAnimalsAlertsRoute
+  AppAnimalsWeightsRoute: typeof AppAnimalsWeightsRoute
+  AppFarmAuditLogsRoute: typeof AppFarmAuditLogsRoute
+  AppFarmMembersRoute: typeof AppFarmMembersRoute
+  AppFarmProfileRoute: typeof AppFarmProfileRoute
+  AppFeedAnalysisRoute: typeof AppFeedAnalysisRoute
+  AppFeedRecordsRoute: typeof AppFeedRecordsRoute
+  AppFeedTypesRoute: typeof AppFeedTypesRoute
+  AppMarketPredictionsRoute: typeof AppMarketPredictionsRoute
+  AppMarketPricesRoute: typeof AppMarketPricesRoute
+  AppMarketSalesRoute: typeof AppMarketSalesRoute
+  AppReportsFeedCostRoute: typeof AppReportsFeedCostRoute
+  AppReportsPerformanceRoute: typeof AppReportsPerformanceRoute
+  AppReportsProfitabilityRoute: typeof AppReportsProfitabilityRoute
+  AppAnimalsIndexRoute: typeof AppAnimalsIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppDashboardRoute: AppDashboardRoute,
+  AppSettingsRoute: AppSettingsRoute,
+  AppAnimalsIdRoute: AppAnimalsIdRoute,
+  AppAnimalsAlertsRoute: AppAnimalsAlertsRoute,
+  AppAnimalsWeightsRoute: AppAnimalsWeightsRoute,
+  AppFarmAuditLogsRoute: AppFarmAuditLogsRoute,
+  AppFarmMembersRoute: AppFarmMembersRoute,
+  AppFarmProfileRoute: AppFarmProfileRoute,
+  AppFeedAnalysisRoute: AppFeedAnalysisRoute,
+  AppFeedRecordsRoute: AppFeedRecordsRoute,
+  AppFeedTypesRoute: AppFeedTypesRoute,
+  AppMarketPredictionsRoute: AppMarketPredictionsRoute,
+  AppMarketPricesRoute: AppMarketPricesRoute,
+  AppMarketSalesRoute: AppMarketSalesRoute,
+  AppReportsFeedCostRoute: AppReportsFeedCostRoute,
+  AppReportsPerformanceRoute: AppReportsPerformanceRoute,
+  AppReportsProfitabilityRoute: AppReportsProfitabilityRoute,
+  AppAnimalsIndexRoute: AppAnimalsIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
