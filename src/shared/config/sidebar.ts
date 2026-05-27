@@ -8,13 +8,15 @@ import {
   Settings,
   type LucideIcon,
 } from "lucide-react";
+import type { Permission } from "@/features/farm/services/permissionService";
 
-export type SidebarChild = { title: string; path: string };
+export type SidebarChild = { title: string; path: string; permission?: Permission };
 export type SidebarItem = {
   title: string;
   path?: string;
   icon: LucideIcon;
   children?: SidebarChild[];
+  permission?: Permission;
 };
 
 export const sidebarConfig: SidebarItem[] = [
@@ -25,7 +27,7 @@ export const sidebarConfig: SidebarItem[] = [
     children: [
       { title: "Farm Profile", path: "/farm/profile" },
       { title: "Members", path: "/farm/members" },
-      { title: "Audit Logs", path: "/farm/audit-logs" },
+      { title: "Audit Logs", path: "/farm/audit-logs", permission: "viewAuditLogs" },
     ],
   },
   {

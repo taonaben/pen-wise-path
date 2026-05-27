@@ -4,18 +4,30 @@ import { ChevronDown, Leaf } from "lucide-react";
 import { sidebarConfig, type SidebarItem } from "@/shared/config/sidebar";
 import { theme } from "@/shared/config/theme";
 import { cn } from "@/lib/utils";
+import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
+import { useFarmPermissions } from "@/features/farm/hooks/useFarmPermissions";
 
 function isItemActive(item: SidebarItem, pathname: string) {
   if (item.path && pathname === item.path) return true;
-  if (item.children?.some((c) => pathname === c.path || pathname.startsWith(c.path + "/"))) return true;
+  if (item.children?.some((c) => pathname === c.path || pathname.startsWith(c.path + "/")))
+    return true;
   return false;
 }
 
 export function Sidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { currentFarm, currentRole } = useCurrentFarm();
+  const { can } = useFarmPermissions(currentRole);
+  const visibleSidebar = sidebarConfig
+    .filter((item) => !item.permission || can(item.permission))
+    .map((item) => ({
+      ...item,
+      children: item.children?.filter((child) => !child.permission || can(child.permission)),
+    }))
+    .filter((item) => item.path || (item.children && item.children.length > 0));
   const [open, setOpen] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
-    sidebarConfig.forEach((i) => {
+    visibleSidebar.forEach((i) => {
       if (i.children && isItemActive(i, pathname)) init[i.title] = true;
     });
     return init;
@@ -35,13 +47,13 @@ export function Sidebar() {
                 {theme.badge}
               </span>
             </div>
-            <div className="text-[11px] text-farm-muted mt-0.5">{theme.defaultFarmName}</div>
+            <div className="text-[11px] text-farm-muted mt-0.5">{currentFarm.name}</div>
           </div>
         </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        {sidebarConfig.map((item) => {
+        {visibleSidebar.map((item) => {
           const Icon = item.icon;
           const active = isItemActive(item, pathname);
 
@@ -109,9 +121,7 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-sidebar-border p-3">
-        <div className="rounded-xl bg-farm-800/60 p-3 text-xs text-farm-muted">
-          {theme.tagline}
-        </div>
+        <div className="rounded-xl bg-farm-800/60 p-3 text-xs text-farm-muted">{theme.tagline}</div>
       </div>
     </aside>
   );

@@ -1,8 +1,10 @@
 import { useRouterState, useNavigate } from "@tanstack/react-router";
-import { Bell, Search, LogOut } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 import { sidebarConfig } from "@/shared/config/sidebar";
-import { theme } from "@/shared/config/theme";
 import { authService } from "@/features/auth/services/authService";
+import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
+import { useFarmPermissions } from "@/features/farm/hooks/useFarmPermissions";
+import { GlobalSearchBox } from "@/features/search/components/GlobalSearchBox";
 
 function deriveTitle(pathname: string): string {
   for (const item of sidebarConfig) {
@@ -18,7 +20,17 @@ function deriveTitle(pathname: string): string {
 export function Topbar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
+  const { currentFarm, currentRole } = useCurrentFarm();
+  const { permissions } = useFarmPermissions(currentRole);
   const title = deriveTitle(pathname);
+  const roleLabel = currentRole.charAt(0).toUpperCase() + currentRole.slice(1);
+  const farmInitials =
+    currentFarm.name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "F";
 
   const handleLogout = async () => {
     await authService.logout();
@@ -29,17 +41,18 @@ export function Topbar() {
     <header className="h-16 border-b bg-farm-900/60 backdrop-blur-md flex items-center gap-4 px-6 sticky top-0 z-10">
       <div>
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
-        <div className="text-[11px] text-farm-muted">{theme.defaultFarmName}</div>
+        <div className="text-[11px] text-farm-muted">{currentFarm.name}</div>
       </div>
 
       <div className="ml-6 flex-1 max-w-md hidden md:block">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-farm-muted" />
-          <input
-            placeholder="Search animals, feed, members…"
-            className="w-full rounded-full bg-farm-800/70 border pl-9 pr-4 py-2 text-sm placeholder:text-farm-muted/70 focus:outline-none focus:ring-2 focus:ring-farm-lime/40"
-          />
-        </div>
+        <GlobalSearchBox
+          farmId={currentFarm.id}
+          permissions={{
+            viewAnimals: permissions.viewAnimals,
+            globalSearchMembers: permissions.globalSearchMembers,
+            globalSearchAuditLogs: permissions.globalSearchAuditLogs,
+          }}
+        />
       </div>
 
       <div className="ml-auto flex items-center gap-2">
@@ -48,9 +61,9 @@ export function Topbar() {
         </button>
         <div className="h-9 px-3 rounded-full bg-farm-800/70 border flex items-center gap-2">
           <div className="h-6 w-6 rounded-full bg-farm-lime text-farm-950 text-xs font-bold flex items-center justify-center">
-            FM
+            {farmInitials}
           </div>
-          <span className="text-xs text-farm-muted hidden sm:inline">Farm Manager</span>
+          <span className="text-xs text-farm-muted hidden sm:inline">{roleLabel}</span>
         </div>
         <button
           onClick={handleLogout}
