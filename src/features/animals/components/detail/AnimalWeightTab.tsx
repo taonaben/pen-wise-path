@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { PlaceholderLineChart } from "@/shared/components/charts/PlaceholderLineChart";
 import { StatCard } from "@/shared/components/ui/StatCard";
+import { AnimalWeightTrendChart } from "./AnimalWeightTrendChart";
 import { formatKg, formatKgPerDay } from "./animalDetailFormat";
 import type { AnimalDetailMetrics, WeightRecord } from "../../types/animal.types";
 
@@ -28,7 +28,7 @@ export function AnimalWeightTab({ records, metrics, isLoading }: Props) {
         <StatCard title="Average Daily Gain" value={formatKgPerDay(metrics.averageDailyGainKg)} />
       </div>
 
-      <PlaceholderLineChart title="Weight Trend" />
+      <AnimalWeightTrendChart records={records} title="Weight Trend" />
 
       <div className="overflow-x-auto rounded-xl border bg-farm-800/80">
         <table className="w-full min-w-[640px] text-sm">

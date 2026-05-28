@@ -1,17 +1,18 @@
-import { PlaceholderLineChart } from "@/shared/components/charts/PlaceholderLineChart";
 import { StatCard } from "@/shared/components/ui/StatCard";
 import { GrowthStatusBadge } from "../GrowthStatusBadge";
+import { AnimalWeightTrendChart } from "./AnimalWeightTrendChart";
 import { formatKg, formatKgPerDay, formatMoney, formatRatio } from "./animalDetailFormat";
 import type { AnimalAlert } from "../../services/alertService";
-import type { AnimalDetailMetrics, AnimalViewModel } from "../../types/animal.types";
+import type { AnimalDetailMetrics, AnimalViewModel, WeightRecord } from "../../types/animal.types";
 
 type Props = {
   animal: AnimalViewModel;
   metrics: AnimalDetailMetrics;
+  weightRecords: WeightRecord[];
   alerts: AnimalAlert[];
 };
 
-export function AnimalOverviewTab({ animal, metrics, alerts }: Props) {
+export function AnimalOverviewTab({ animal, metrics, weightRecords, alerts }: Props) {
   const openAlerts = alerts.filter((alert) => !alert.resolved).slice(0, 3);
 
   return (
@@ -28,7 +29,7 @@ export function AnimalOverviewTab({ animal, metrics, alerts }: Props) {
       </div>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_360px]">
-        <PlaceholderLineChart title="Weight Over Time" />
+        <AnimalWeightTrendChart records={weightRecords} title="Weight Over Time" />
 
         <div className="space-y-4">
           <div className="rounded-xl border bg-farm-800/80 p-5">

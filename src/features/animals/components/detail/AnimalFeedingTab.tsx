@@ -1,5 +1,5 @@
-import { PlaceholderLineChart } from "@/shared/components/charts/PlaceholderLineChart";
 import { StatCard } from "@/shared/components/ui/StatCard";
+import { AnimalFeedingTrendChart } from "./AnimalFeedingTrendChart";
 import { formatKg, formatMoney, formatRatio } from "./animalDetailFormat";
 import type { AnimalDetailMetrics, AnimalFeedAllocationViewModel } from "../../types/animal.types";
 
@@ -20,7 +20,7 @@ export function AnimalFeedingTab({ allocations, metrics, isLoading }: Props) {
         <StatCard title="Feed Records" value={String(allocations.length)} />
       </div>
 
-      <PlaceholderLineChart title="Feed Quantity and Cost Over Time" />
+      <AnimalFeedingTrendChart allocations={allocations} title="Feed Quantity and Cost Over Time" />
 
       <div className="overflow-x-auto rounded-xl border bg-farm-800/80">
         <table className="w-full min-w-[920px] text-sm">

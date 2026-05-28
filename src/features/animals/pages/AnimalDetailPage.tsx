@@ -88,7 +88,12 @@ export function AnimalDetailPage({ animalId }: { animalId: string }) {
             </div>
 
             <TabsContent value="overview">
-              <AnimalOverviewTab animal={animal} metrics={metrics} alerts={alerts} />
+              <AnimalOverviewTab
+                animal={animal}
+                metrics={metrics}
+                weightRecords={weightRecords}
+                alerts={alerts}
+              />
             </TabsContent>
 
             <TabsContent value="weight">
