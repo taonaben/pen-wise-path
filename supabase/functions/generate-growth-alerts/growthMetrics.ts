@@ -27,7 +27,9 @@ export function calculateAnimalGrowthMetrics(args: {
   feedAllocations: FeedAllocationRow[];
   lookbackDays: number;
 }): AnimalGrowthMetrics {
-  const weights = [...args.weightRecords].sort((a, b) => a.recorded_at.localeCompare(b.recorded_at));
+  const weights = [...args.weightRecords].sort((a, b) =>
+    a.recorded_at.localeCompare(b.recorded_at),
+  );
 
   const latest = weights.length > 0 ? weights[weights.length - 1] : null;
   const previous = weights.length > 1 ? weights[weights.length - 2] : null;

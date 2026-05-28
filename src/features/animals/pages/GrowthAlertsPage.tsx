@@ -47,7 +47,8 @@ export function GrowthAlertsPage() {
 
       {runScan.data && (
         <div className="rounded-2xl border bg-farm-800/80 p-4 text-sm text-farm-muted">
-          Last scan summary: {runScan.data.generated_alerts} generated, {runScan.data.updated_alerts} updated, {runScan.data.skipped_alerts} skipped.
+          Last scan summary: {runScan.data.generated_alerts} generated,{" "}
+          {runScan.data.updated_alerts} updated, {runScan.data.skipped_alerts} skipped.
         </div>
       )}
 
@@ -71,10 +72,7 @@ export function GrowthAlertsPage() {
 
       <div className="space-y-3">
         {alerts.map((alert) => (
-          <div
-            key={alert.id}
-            className="rounded-2xl border bg-farm-800/80 p-4"
-          >
+          <div key={alert.id} className="rounded-2xl border bg-farm-800/80 p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -89,7 +87,9 @@ export function GrowthAlertsPage() {
                 <div className="mt-2 text-sm font-medium">{alert.title}</div>
                 <p className="mt-1 text-sm text-farm-muted">{alert.message}</p>
                 <div className="mt-2 text-xs text-farm-muted">
-                  Actual: {formatAlertValue(alert.actual_value)} | Expected: {formatAlertValue(alert.expected_value)} | Confidence: {formatAlertValue(alert.confidence)}
+                  Actual: {formatAlertValue(alert.actual_value)} | Expected:{" "}
+                  {formatAlertValue(alert.expected_value)} | Confidence:{" "}
+                  {formatAlertValue(alert.confidence)}
                 </div>
               </div>
 

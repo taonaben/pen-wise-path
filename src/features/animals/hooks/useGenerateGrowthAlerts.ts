@@ -27,7 +27,9 @@ export function useGenerateGrowthAlerts(farmId: string | undefined) {
       await queryClient.invalidateQueries({ queryKey: growthAlertKeys.list(farmId) });
 
       if (args.animalId) {
-        await queryClient.invalidateQueries({ queryKey: animalAlertKeys.list(farmId, args.animalId) });
+        await queryClient.invalidateQueries({
+          queryKey: animalAlertKeys.list(farmId, args.animalId),
+        });
       } else {
         await queryClient.invalidateQueries({ queryKey: animalAlertKeys.all });
       }

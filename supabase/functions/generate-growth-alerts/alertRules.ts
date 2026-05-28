@@ -48,7 +48,10 @@ export function detectGrowthAlerts(args: {
     });
   }
 
-  if (args.metrics.recentAdgKgPerDay !== null && args.metrics.recentAdgKgPerDay < threshold.min_expected_adg_kg_per_day) {
+  if (
+    args.metrics.recentAdgKgPerDay !== null &&
+    args.metrics.recentAdgKgPerDay < threshold.min_expected_adg_kg_per_day
+  ) {
     const severity = args.metrics.recentAdgKgPerDay <= 0 ? "critical" : "high";
     alerts.push({
       alert_type: "LOW_ADG",

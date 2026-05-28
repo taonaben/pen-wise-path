@@ -7,11 +7,7 @@ export function getSupabaseClients(authorization: string) {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!supabaseUrl || !anonKey || !serviceRoleKey) {
-    throw new HttpError(
-      "SCAN_FAILED",
-      "Supabase function environment is not configured",
-      500,
-    );
+    throw new HttpError("SCAN_FAILED", "Supabase function environment is not configured", 500);
   }
 
   const callerClient = createClient(supabaseUrl, anonKey, {
