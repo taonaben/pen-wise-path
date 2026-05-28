@@ -35,6 +35,7 @@ export const sidebarConfig: SidebarItem[] = [
     icon: Beef,
     children: [
       { title: "All Animals", path: "/animals" },
+      { title: "Pens", path: "/animals/pens" },
       { title: "Weight Records", path: "/animals/weights" },
       { title: "Growth Alerts", path: "/animals/alerts" },
     ],

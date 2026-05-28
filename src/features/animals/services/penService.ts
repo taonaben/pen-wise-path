@@ -6,6 +6,23 @@ import type { AnimalPenAssignment, Pen } from "../types/animal.types";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
 
+type CreatePenPayload = {
+  farmId: string;
+  name: string;
+  speciesId?: string | null;
+  capacity?: number | null;
+  status?: "active" | "inactive" | "maintenance";
+  notes?: string | null;
+};
+
+type AssignAnimalToPenPayload = {
+  farmId: string;
+  animalId: string;
+  penId: string;
+  startedAt?: string;
+  reason?: string | null;
+};
+
 export const penService = {
   async getPens(farmId: string): Promise<Pen[]> {
     const { data, error } = await db
@@ -31,6 +48,19 @@ export const penService = {
     return (data ?? []) as AnimalPenAssignment[];
   },
 
+  async getCurrentAssignmentsByFarm(farmId: string): Promise<AnimalPenAssignment[]> {
+    const { data, error } = await db
+      .from("animal_pen_assignments")
+      .select("*, pen:pens(*)")
+      .eq("farm_id", farmId)
+      .is("ended_at", null)
+      .order("started_at", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (error) handleSupabaseError(error);
+    return (data ?? []) as AnimalPenAssignment[];
+  },
+
   async getCurrentAnimalPen(farmId: string, animalId: string): Promise<AnimalPenAssignment | null> {
     const { data, error } = await db
       .from("animal_pen_assignments")
@@ -42,5 +72,56 @@ export const penService = {
 
     if (error) handleSupabaseError(error);
     return (data ?? null) as AnimalPenAssignment | null;
+  },
+
+  async createPen(payload: CreatePenPayload): Promise<Pen> {
+    const { data, error } = await db
+      .from("pens")
+      .insert({
+        farm_id: payload.farmId,
+        name: payload.name.trim(),
+        species_id: payload.speciesId ?? null,
+        capacity: payload.capacity ?? null,
+        status: payload.status ?? "active",
+        notes: payload.notes?.trim() || null,
+      })
+      .select("*")
+      .single();
+
+    if (error) handleSupabaseError(error);
+    return data as Pen;
+  },
+
+  async assignAnimalToPen(payload: AssignAnimalToPenPayload): Promise<AnimalPenAssignment> {
+    await this.clearCurrentAssignment(payload.farmId, payload.animalId);
+
+    const { data, error } = await db
+      .from("animal_pen_assignments")
+      .insert({
+        farm_id: payload.farmId,
+        animal_id: payload.animalId,
+        pen_id: payload.penId,
+        started_at: payload.startedAt ?? new Date().toISOString().slice(0, 10),
+        reason: payload.reason?.trim() || null,
+      })
+      .select("*, pen:pens(*)")
+      .single();
+
+    if (error) handleSupabaseError(error);
+    return data as AnimalPenAssignment;
+  },
+
+  async clearCurrentAssignment(farmId: string, animalId: string): Promise<void> {
+    const { error } = await db
+      .from("animal_pen_assignments")
+      .update({
+        ended_at: new Date().toISOString().slice(0, 10),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("farm_id", farmId)
+      .eq("animal_id", animalId)
+      .is("ended_at", null);
+
+    if (error) handleSupabaseError(error);
   },
 };

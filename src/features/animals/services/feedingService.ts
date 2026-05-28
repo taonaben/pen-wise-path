@@ -18,7 +18,7 @@ import type {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
 
-type CreateFeedingEventPayload = {
+export type CreateFeedingEventPayload = {
   farmId: string;
   feedTypeId: string;
   quantityKg: number;
@@ -30,8 +30,48 @@ type CreateFeedingEventPayload = {
   notes?: string | null;
 };
 
+export type FeedingEventsFilters = {
+  dateFrom?: string;
+  dateTo?: string;
+  feedTypeId?: string;
+  penId?: string;
+  feedingMethod?: FeedingMethod;
+};
+
+export type FeedingEventListItem = {
+  id: string;
+  date: string;
+  feedTypeName: string;
+  scope: FeedingMethod;
+  target: string;
+  quantityKg: number;
+  animalsFed: number;
+  totalCost: number;
+  allocationMethod: FeedAllocationMethod;
+  recordedBy: string | null;
+  notes: string | null;
+};
+
 type FeedAllocationRow = FeedingEventAnimal & {
   feeding_event: (FeedingEvent & { feed_type: FeedType | null }) | null;
+};
+
+type FeedingEventListRow = FeedingEvent & {
+  feed_type: FeedType | null;
+  feeding_event_animals: Array<{
+    animal_id: string;
+    allocated_cost: number | string;
+    animal?: { tag_number: string | null } | null;
+  }>;
+};
+
+type FeedingEventDetailRow = FeedingEvent & {
+  feed_type: FeedType | null;
+  feeding_event_animals: Array<
+    FeedingEventAnimal & {
+      animal?: { id: string; tag_number: string } | null;
+    }
+  >;
 };
 
 function latestWeight(records: WeightRecord[]) {
@@ -60,6 +100,35 @@ function mapFeedAllocation(row: FeedAllocationRow): AnimalFeedAllocationViewMode
     allocatedCost: toNumber(row.allocated_cost),
     notes: event?.notes ?? null,
     recordedBy: event?.created_by ?? null,
+  };
+}
+
+function mapFeedingEventListItem(row: FeedingEventListRow): FeedingEventListItem {
+  const animalsFed = row.feeding_event_animals?.length ?? 0;
+  const totalCost = (row.feeding_event_animals ?? []).reduce(
+    (sum, allocation) => sum + toNumber(allocation.allocated_cost),
+    0,
+  );
+
+  let target = "Custom Group";
+  if (row.feeding_method === "individual") {
+    target = row.feeding_event_animals?.[0]?.animal?.tag_number ?? "Individual animal";
+  } else if (row.feeding_method === "pen_group") {
+    target = row.pen?.name ?? "Pen";
+  }
+
+  return {
+    id: row.id,
+    date: row.feeding_date,
+    feedTypeName: row.feed_type?.name ?? "Unspecified feed",
+    scope: row.feeding_method,
+    target,
+    quantityKg: toNumber(row.quantity_kg),
+    animalsFed,
+    totalCost,
+    allocationMethod: row.allocation_method,
+    recordedBy: row.created_by,
+    notes: row.notes,
   };
 }
 
@@ -117,6 +186,62 @@ async function calculateAllocations(args: {
 }
 
 export const feedingService = {
+  async getFeedingEvents(
+    farmId: string,
+    filters: FeedingEventsFilters = {},
+  ): Promise<FeedingEventListItem[]> {
+    let query = db
+      .from("feeding_events")
+      .select(
+        `
+          *,
+          pen:pens(*),
+          feed_type:feed_types(*),
+          feeding_event_animals(
+            animal_id,
+            allocated_cost,
+            animal:animals(tag_number)
+          )
+        `,
+      )
+      .eq("farm_id", farmId)
+      .order("feeding_date", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (filters.dateFrom) query = query.gte("feeding_date", filters.dateFrom);
+    if (filters.dateTo) query = query.lte("feeding_date", filters.dateTo);
+    if (filters.feedTypeId) query = query.eq("feed_type_id", filters.feedTypeId);
+    if (filters.penId) query = query.eq("pen_id", filters.penId);
+    if (filters.feedingMethod) query = query.eq("feeding_method", filters.feedingMethod);
+
+    const { data, error } = await query;
+    if (error) handleSupabaseError(error);
+
+    return ((data ?? []) as FeedingEventListRow[]).map(mapFeedingEventListItem);
+  },
+
+  async getFeedingEventById(farmId: string, eventId: string): Promise<FeedingEventDetailRow> {
+    const { data, error } = await db
+      .from("feeding_events")
+      .select(
+        `
+          *,
+          pen:pens(*),
+          feed_type:feed_types(*),
+          feeding_event_animals(
+            *,
+            animal:animals(id, tag_number)
+          )
+        `,
+      )
+      .eq("farm_id", farmId)
+      .eq("id", eventId)
+      .single();
+
+    if (error) handleSupabaseError(error);
+    return requireData(data, "Feeding event not found") as FeedingEventDetailRow;
+  },
+
   async getAnimalFeedAllocations(
     farmId: string,
     animalId: string,

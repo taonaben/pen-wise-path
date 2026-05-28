@@ -29,6 +29,7 @@ import { Route as AppFarmProfileRouteImport } from './routes/_app/farm/profile'
 import { Route as AppFarmMembersRouteImport } from './routes/_app/farm/members'
 import { Route as AppFarmAuditLogsRouteImport } from './routes/_app/farm/audit-logs'
 import { Route as AppAnimalsWeightsRouteImport } from './routes/_app/animals/weights'
+import { Route as AppAnimalsPensRouteImport } from './routes/_app/animals/pens'
 import { Route as AppAnimalsAlertsRouteImport } from './routes/_app/animals/alerts'
 import { Route as AppAnimalsIdRouteImport } from './routes/_app/animals/$id'
 import { Route as AppFeedTypesIdRouteImport } from './routes/_app/feed/types.$id'
@@ -132,6 +133,11 @@ const AppAnimalsWeightsRoute = AppAnimalsWeightsRouteImport.update({
   path: '/animals/weights',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAnimalsPensRoute = AppAnimalsPensRouteImport.update({
+  id: '/animals/pens',
+  path: '/animals/pens',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAnimalsAlertsRoute = AppAnimalsAlertsRouteImport.update({
   id: '/animals/alerts',
   path: '/animals/alerts',
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/animals/$id': typeof AppAnimalsIdRoute
   '/animals/alerts': typeof AppAnimalsAlertsRoute
+  '/animals/pens': typeof AppAnimalsPensRoute
   '/animals/weights': typeof AppAnimalsWeightsRoute
   '/farm/audit-logs': typeof AppFarmAuditLogsRoute
   '/farm/members': typeof AppFarmMembersRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/animals/$id': typeof AppAnimalsIdRoute
   '/animals/alerts': typeof AppAnimalsAlertsRoute
+  '/animals/pens': typeof AppAnimalsPensRoute
   '/animals/weights': typeof AppAnimalsWeightsRoute
   '/farm/audit-logs': typeof AppFarmAuditLogsRoute
   '/farm/members': typeof AppFarmMembersRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/animals/$id': typeof AppAnimalsIdRoute
   '/_app/animals/alerts': typeof AppAnimalsAlertsRoute
+  '/_app/animals/pens': typeof AppAnimalsPensRoute
   '/_app/animals/weights': typeof AppAnimalsWeightsRoute
   '/_app/farm/audit-logs': typeof AppFarmAuditLogsRoute
   '/_app/farm/members': typeof AppFarmMembersRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/animals/$id'
     | '/animals/alerts'
+    | '/animals/pens'
     | '/animals/weights'
     | '/farm/audit-logs'
     | '/farm/members'
@@ -256,6 +266,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/animals/$id'
     | '/animals/alerts'
+    | '/animals/pens'
     | '/animals/weights'
     | '/farm/audit-logs'
     | '/farm/members'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/animals/$id'
     | '/_app/animals/alerts'
+    | '/_app/animals/pens'
     | '/_app/animals/weights'
     | '/_app/farm/audit-logs'
     | '/_app/farm/members'
@@ -447,6 +459,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAnimalsWeightsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/animals/pens': {
+      id: '/_app/animals/pens'
+      path: '/animals/pens'
+      fullPath: '/animals/pens'
+      preLoaderRoute: typeof AppAnimalsPensRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/animals/alerts': {
       id: '/_app/animals/alerts'
       path: '/animals/alerts'
@@ -488,6 +507,7 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppAnimalsIdRoute: typeof AppAnimalsIdRoute
   AppAnimalsAlertsRoute: typeof AppAnimalsAlertsRoute
+  AppAnimalsPensRoute: typeof AppAnimalsPensRoute
   AppAnimalsWeightsRoute: typeof AppAnimalsWeightsRoute
   AppFarmAuditLogsRoute: typeof AppFarmAuditLogsRoute
   AppFarmMembersRoute: typeof AppFarmMembersRoute
@@ -509,6 +529,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppAnimalsIdRoute: AppAnimalsIdRoute,
   AppAnimalsAlertsRoute: AppAnimalsAlertsRoute,
+  AppAnimalsPensRoute: AppAnimalsPensRoute,
   AppAnimalsWeightsRoute: AppAnimalsWeightsRoute,
   AppFarmAuditLogsRoute: AppFarmAuditLogsRoute,
   AppFarmMembersRoute: AppFarmMembersRoute,
