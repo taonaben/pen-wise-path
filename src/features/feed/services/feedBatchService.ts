@@ -26,6 +26,19 @@ export const feedBatchService = {
     return (data ?? []) as FeedBatch[];
   },
 
+  async listByFeedType(farmId: string, feedTypeId: string): Promise<FeedBatch[]> {
+    const { data, error } = await db
+      .from("feed_batches")
+      .select("*")
+      .eq("farm_id", farmId)
+      .eq("feed_type_id", feedTypeId)
+      .order("purchase_date", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (error) handleSupabaseError(error);
+    return (data ?? []) as FeedBatch[];
+  },
+
   async create(payload: FeedBatchCreatePayload): Promise<FeedBatch> {
     const userId = await getCurrentUserId();
 

@@ -31,6 +31,7 @@ import { Route as AppFarmAuditLogsRouteImport } from './routes/_app/farm/audit-l
 import { Route as AppAnimalsWeightsRouteImport } from './routes/_app/animals/weights'
 import { Route as AppAnimalsAlertsRouteImport } from './routes/_app/animals/alerts'
 import { Route as AppAnimalsIdRouteImport } from './routes/_app/animals/$id'
+import { Route as AppFeedTypesIdRouteImport } from './routes/_app/feed/types.$id'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -141,6 +142,11 @@ const AppAnimalsIdRoute = AppAnimalsIdRouteImport.update({
   path: '/animals/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFeedTypesIdRoute = AppFeedTypesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppFeedTypesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -156,7 +162,7 @@ export interface FileRoutesByFullPath {
   '/farm/profile': typeof AppFarmProfileRoute
   '/feed/analysis': typeof AppFeedAnalysisRoute
   '/feed/records': typeof AppFeedRecordsRoute
-  '/feed/types': typeof AppFeedTypesRoute
+  '/feed/types': typeof AppFeedTypesRouteWithChildren
   '/market/predictions': typeof AppMarketPredictionsRoute
   '/market/prices': typeof AppMarketPricesRoute
   '/market/sales': typeof AppMarketSalesRoute
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/reports/performance': typeof AppReportsPerformanceRoute
   '/reports/profitability': typeof AppReportsProfitabilityRoute
   '/animals/': typeof AppAnimalsIndexRoute
+  '/feed/types/$id': typeof AppFeedTypesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -179,7 +186,7 @@ export interface FileRoutesByTo {
   '/farm/profile': typeof AppFarmProfileRoute
   '/feed/analysis': typeof AppFeedAnalysisRoute
   '/feed/records': typeof AppFeedRecordsRoute
-  '/feed/types': typeof AppFeedTypesRoute
+  '/feed/types': typeof AppFeedTypesRouteWithChildren
   '/market/predictions': typeof AppMarketPredictionsRoute
   '/market/prices': typeof AppMarketPricesRoute
   '/market/sales': typeof AppMarketSalesRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByTo {
   '/reports/performance': typeof AppReportsPerformanceRoute
   '/reports/profitability': typeof AppReportsProfitabilityRoute
   '/animals': typeof AppAnimalsIndexRoute
+  '/feed/types/$id': typeof AppFeedTypesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -204,7 +212,7 @@ export interface FileRoutesById {
   '/_app/farm/profile': typeof AppFarmProfileRoute
   '/_app/feed/analysis': typeof AppFeedAnalysisRoute
   '/_app/feed/records': typeof AppFeedRecordsRoute
-  '/_app/feed/types': typeof AppFeedTypesRoute
+  '/_app/feed/types': typeof AppFeedTypesRouteWithChildren
   '/_app/market/predictions': typeof AppMarketPredictionsRoute
   '/_app/market/prices': typeof AppMarketPricesRoute
   '/_app/market/sales': typeof AppMarketSalesRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/_app/reports/performance': typeof AppReportsPerformanceRoute
   '/_app/reports/profitability': typeof AppReportsProfitabilityRoute
   '/_app/animals/': typeof AppAnimalsIndexRoute
+  '/_app/feed/types/$id': typeof AppFeedTypesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -237,6 +246,7 @@ export interface FileRouteTypes {
     | '/reports/performance'
     | '/reports/profitability'
     | '/animals/'
+    | '/feed/types/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/reports/performance'
     | '/reports/profitability'
     | '/animals'
+    | '/feed/types/$id'
   id:
     | '__root__'
     | '/'
@@ -284,6 +295,7 @@ export interface FileRouteTypes {
     | '/_app/reports/performance'
     | '/_app/reports/profitability'
     | '/_app/animals/'
+    | '/_app/feed/types/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -449,8 +461,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAnimalsIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/feed/types/$id': {
+      id: '/_app/feed/types/$id'
+      path: '/$id'
+      fullPath: '/feed/types/$id'
+      preLoaderRoute: typeof AppFeedTypesIdRouteImport
+      parentRoute: typeof AppFeedTypesRoute
+    }
   }
 }
+
+interface AppFeedTypesRouteChildren {
+  AppFeedTypesIdRoute: typeof AppFeedTypesIdRoute
+}
+
+const AppFeedTypesRouteChildren: AppFeedTypesRouteChildren = {
+  AppFeedTypesIdRoute: AppFeedTypesIdRoute,
+}
+
+const AppFeedTypesRouteWithChildren = AppFeedTypesRoute._addFileChildren(
+  AppFeedTypesRouteChildren,
+)
 
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
@@ -463,7 +494,7 @@ interface AppRouteChildren {
   AppFarmProfileRoute: typeof AppFarmProfileRoute
   AppFeedAnalysisRoute: typeof AppFeedAnalysisRoute
   AppFeedRecordsRoute: typeof AppFeedRecordsRoute
-  AppFeedTypesRoute: typeof AppFeedTypesRoute
+  AppFeedTypesRoute: typeof AppFeedTypesRouteWithChildren
   AppMarketPredictionsRoute: typeof AppMarketPredictionsRoute
   AppMarketPricesRoute: typeof AppMarketPricesRoute
   AppMarketSalesRoute: typeof AppMarketSalesRoute
@@ -484,7 +515,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFarmProfileRoute: AppFarmProfileRoute,
   AppFeedAnalysisRoute: AppFeedAnalysisRoute,
   AppFeedRecordsRoute: AppFeedRecordsRoute,
-  AppFeedTypesRoute: AppFeedTypesRoute,
+  AppFeedTypesRoute: AppFeedTypesRouteWithChildren,
   AppMarketPredictionsRoute: AppMarketPredictionsRoute,
   AppMarketPricesRoute: AppMarketPricesRoute,
   AppMarketSalesRoute: AppMarketSalesRoute,

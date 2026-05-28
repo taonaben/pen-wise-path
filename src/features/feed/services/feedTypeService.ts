@@ -24,6 +24,18 @@ export const feedTypeService = {
     return (data ?? []) as FeedType[];
   },
 
+  async getById(farmId: string, feedTypeId: string): Promise<FeedType> {
+    const { data, error } = await db
+      .from("feed_types")
+      .select("*")
+      .eq("farm_id", farmId)
+      .eq("id", feedTypeId)
+      .single();
+
+    if (error) handleSupabaseError(error);
+    return requireData(data, "Feed type not found") as FeedType;
+  },
+
   async create(payload: FeedTypeCreatePayload): Promise<FeedType> {
     const userId = await getCurrentUserId();
 

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,6 +80,7 @@ function formatMoney(value: number) {
 }
 
 export function FeedTypesPage() {
+  const navigate = useNavigate();
   const { currentFarm } = useCurrentFarm();
   const speciesQuery = useAnimalSpecies();
   const inventoryQuery = useFeedInventory(currentFarm.id);
@@ -364,7 +366,27 @@ export function FeedTypesPage() {
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.feedType.id} className="border-t border-farm-600/30">
+              <tr
+                key={row.feedType.id}
+                className="cursor-pointer border-t border-farm-600/30 hover:bg-farm-700/30"
+                role="link"
+                tabIndex={0}
+                onClick={() =>
+                  navigate({
+                    to: "/feed/types/$id",
+                    params: { id: row.feedType.id },
+                  })
+                }
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    navigate({
+                      to: "/feed/types/$id",
+                      params: { id: row.feedType.id },
+                    });
+                  }
+                }}
+              >
                 <td className="px-5 py-3">
                   <div className="font-medium">{row.feedType.name}</div>
                   <div className="text-xs text-farm-muted">{row.feedType.description ?? "-"}</div>
@@ -403,14 +425,19 @@ export function FeedTypesPage() {
                   </span>
                 </td>
                 <td className="px-5 py-3">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    type="button"
-                    onClick={() => openBatchDialog(row.feedType.id)}
-                  >
-                    Add Batch
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openBatchDialog(row.feedType.id);
+                      }}
+                    >
+                      Add Batch
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}

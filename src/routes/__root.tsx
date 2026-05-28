@@ -35,11 +35,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body className="bg-farm-950 text-foreground antialiased">
+      <body className="bg-farm-950 text-foreground antialiased" suppressHydrationWarning>
         {children}
         <Scripts />
       </body>
