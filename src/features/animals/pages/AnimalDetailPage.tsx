@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
@@ -17,10 +18,12 @@ import { useAnimalFeedAllocations } from "../hooks/useAnimalFeedAllocations";
 import { useAnimalHealthEvents } from "../hooks/useAnimalHealthEvents";
 import { useAnimalPen } from "../hooks/useAnimalPen";
 import { useAnimalWeights } from "../hooks/useAnimalWeights";
+import { useGenerateGrowthAlerts } from "../hooks/useGenerateGrowthAlerts";
 import { calculateAnimalDetailMetrics } from "../services/animalAnalyticsService";
 
 export function AnimalDetailPage({ animalId }: { animalId: string }) {
   const { currentFarm } = useCurrentFarm();
+  const generateGrowthAlerts = useGenerateGrowthAlerts(currentFarm.id);
   const animalQuery = useAnimal(currentFarm.id, animalId);
   const weightQuery = useAnimalWeights(currentFarm.id, animalId);
   const feedQuery = useAnimalFeedAllocations(currentFarm.id, animalId);
@@ -41,14 +44,40 @@ export function AnimalDetailPage({ animalId }: { animalId: string }) {
     return calculateAnimalDetailMetrics(animal, weightRecords, feedAllocations);
   }, [animal, feedAllocations, weightRecords]);
 
+  const onAnalyzeAnimal = async () => {
+    try {
+      const result = await generateGrowthAlerts.mutateAsync({
+        mode: "single_animal",
+        animalId,
+      });
+      toast.success(
+        `Analysis complete: ${result.generated_alerts} generated, ${result.updated_alerts} updated.`,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Animal analysis failed";
+      toast.error(message);
+    }
+  };
+
   return (
     <div className="space-y-5">
-      <Link
-        to="/animals"
-        className="inline-flex items-center gap-1.5 text-sm text-farm-muted hover:text-farm-lime"
-      >
-        <ArrowLeft className="h-4 w-4" /> Back to animals
-      </Link>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Link
+          to="/animals"
+          className="inline-flex items-center gap-1.5 text-sm text-farm-muted hover:text-farm-lime"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to animals
+        </Link>
+
+        <button
+          type="button"
+          onClick={onAnalyzeAnimal}
+          disabled={generateGrowthAlerts.isPending}
+          className="inline-flex h-10 items-center justify-center rounded-lg bg-farm-lime px-4 text-sm font-medium text-farm-950 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {generateGrowthAlerts.isPending ? "Analyzing..." : "Analyze Animal"}
+        </button>
+      </div>
 
       {animalQuery.isLoading && (
         <div className="rounded-xl border bg-farm-800/80 p-6 text-sm text-farm-muted">
