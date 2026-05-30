@@ -5,6 +5,7 @@ import type {
   AnimalPredictionResult,
   AnimalRow,
   FeedAllocationRow,
+  HealthAssessmentRow,
   MarketPriceMethod,
   MarketPriceRow,
   PredictionWindow,
@@ -66,7 +67,9 @@ function averageDailyFeedCost(feedAllocations: FeedAllocationRow[], purchaseDate
   cutoff.setUTCDate(cutoff.getUTCDate() - 30);
   const cutoffIso = cutoff.toISOString().slice(0, 10);
 
-  const recent = feedAllocations.filter((row) => (row.feeding_event?.feeding_date ?? "") >= cutoffIso);
+  const recent = feedAllocations.filter(
+    (row) => (row.feeding_event?.feeding_date ?? "") >= cutoffIso,
+  );
   if (recent.length > 0) {
     return feedCostToDate(recent) / 30;
   }
@@ -84,9 +87,10 @@ function buildWindows(args: {
   feedCostToDate: number;
   averageDailyFeedCost: number;
 }): PredictionWindow[] {
-  const currentProfitBaseline = args.predictedPrice === null
-    ? null
-    : args.currentWeightKg * args.predictedPrice - args.purchasePrice - args.feedCostToDate;
+  const currentProfitBaseline =
+    args.predictedPrice === null
+      ? null
+      : args.currentWeightKg * args.predictedPrice - args.purchasePrice - args.feedCostToDate;
 
   return args.windows.map((days) => {
     const predictedWeight = args.currentWeightKg + Math.max(args.adgKgPerDay ?? 0, 0) * days;
@@ -113,9 +117,12 @@ function buildWindows(args: {
 }
 
 function chooseBestWindow(windows: PredictionWindow[]) {
-  return [...windows]
-    .filter((window) => window.expected_profit !== null)
-    .sort((a, b) => (b.expected_profit ?? -Infinity) - (a.expected_profit ?? -Infinity))[0] ?? windows[0];
+  return (
+    [...windows]
+      .filter((window) => window.expected_profit !== null)
+      .sort((a, b) => (b.expected_profit ?? -Infinity) - (a.expected_profit ?? -Infinity))[0] ??
+    windows[0]
+  );
 }
 
 function recommendationFor(args: {
@@ -126,6 +133,7 @@ function recommendationFor(args: {
   speciesSlug: string;
   severeAlerts: AlertRow[];
   confidenceLabel: string;
+  healthAssessment?: HealthAssessmentRow;
 }) {
   const config = speciesSellingConfig[args.speciesSlug] ?? speciesSellingConfig.cattle;
   const now = args.windows.find((window) => window.days === 0) ?? args.windows[0];
@@ -135,6 +143,13 @@ function recommendationFor(args: {
     nowProfit !== null && bestProfit !== null ? Math.max(bestProfit - nowProfit, 0) : null;
 
   if (args.severeAlerts.length > 0 || (args.adgKgPerDay !== null && args.adgKgPerDay < 0)) {
+    return "INSPECT_BEFORE_SELLING" as const;
+  }
+
+  if (
+    args.healthAssessment?.health_status === "critical" ||
+    args.healthAssessment?.health_status === "at_risk"
+  ) {
     return "INSPECT_BEFORE_SELLING" as const;
   }
 
@@ -148,7 +163,10 @@ function recommendationFor(args: {
 
   if (
     args.bestWindow.days === 0 ||
-    (profitGap !== null && bestProfit !== null && profitGap <= Math.max(bestProfit * 0.05, 10) && args.currentWeightKg >= config.min)
+    (profitGap !== null &&
+      bestProfit !== null &&
+      profitGap <= Math.max(bestProfit * 0.05, 10) &&
+      args.currentWeightKg >= config.min)
   ) {
     return "SELL_NOW" as const;
   }
@@ -160,7 +178,11 @@ function recommendationFor(args: {
   return "WATCH" as const;
 }
 
-function explanationFor(recommendation: string, bestWindow: PredictionWindow, confidenceReasons: string[]) {
+function explanationFor(
+  recommendation: string,
+  bestWindow: PredictionWindow,
+  confidenceReasons: string[],
+) {
   if (recommendation === "INSPECT_BEFORE_SELLING") {
     return "Inspect before selling because growth or alert data indicates elevated risk.";
   }
@@ -183,6 +205,7 @@ export function generateAnimalPrediction(args: {
   feedAllocations: FeedAllocationRow[];
   marketPrices: MarketPriceRow[];
   severeAlerts: AlertRow[];
+  healthAssessment?: HealthAssessmentRow;
   windows: number[];
   marketPriceMethod: MarketPriceMethod;
 }): AnimalPredictionResult {
@@ -199,6 +222,7 @@ export function generateAnimalPrediction(args: {
     feedAllocations: args.feedAllocations,
     marketPrices: args.marketPrices,
     severeAlerts: args.severeAlerts,
+    healthAssessment: args.healthAssessment,
   });
   const windows = buildWindows({
     windows: args.windows,
@@ -218,6 +242,7 @@ export function generateAnimalPrediction(args: {
     speciesSlug,
     severeAlerts: args.severeAlerts,
     confidenceLabel: confidence.label,
+    healthAssessment: args.healthAssessment,
   });
 
   return {
@@ -250,6 +275,13 @@ export function generateAnimalPrediction(args: {
         alert_type: alert.alert_type,
         severity: alert.severity,
       })),
+      latest_health_assessment: args.healthAssessment
+        ? {
+            health_status: args.healthAssessment.health_status,
+            health_score: args.healthAssessment.health_score,
+            confidence_label: args.healthAssessment.confidence_label,
+          }
+        : null,
     },
   };
 }

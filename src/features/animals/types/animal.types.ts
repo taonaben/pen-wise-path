@@ -6,7 +6,23 @@ export type PenStatus = "active" | "inactive" | "maintenance";
 export type FeedingMethod = "individual" | "pen_group" | "custom_group";
 export type FeedAllocationMethod = "equal_per_animal" | "by_weight_percentage" | "manual";
 export type HealthSeverity = "low" | "medium" | "high" | "critical";
-export type HealthEventStatus = "open" | "monitoring" | "resolved";
+export type HealthEventStatus =
+  | "open"
+  | "monitoring"
+  | "under_treatment"
+  | "recovering"
+  | "resolved";
+export type HealthStatus = "healthy" | "watch" | "at_risk" | "critical";
+export type HealthEventType =
+  | "observation"
+  | "illness"
+  | "injury"
+  | "treatment"
+  | "vaccination"
+  | "deworming"
+  | "inspection"
+  | "recovery"
+  | "other";
 
 export type AnimalSpecies = {
   id: string;
@@ -177,15 +193,55 @@ export type HealthEvent = {
   farm_id: string;
   animal_id: string;
   event_date: string;
-  event_type: string;
+  observed_at: string;
+  event_type: HealthEventType | string;
   severity: HealthSeverity;
   title: string;
   notes: string | null;
   treatment: string | null;
+  symptoms: string | null;
+  diagnosis_note: string | null;
+  treatment_given: string | null;
+  treated_by: string | null;
+  recovery_notes: string | null;
   status: HealthEventStatus;
+  resolved_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type HealthAssessment = {
+  id: string;
+  farm_id: string;
+  assessment_run_id: string;
+  animal_id: string;
+  health_status: HealthStatus;
+  health_score: number;
+  risk_level: "low" | "medium" | "high" | "critical";
+  confidence_score: number;
+  confidence_label: "High" | "Medium" | "Low";
+  summary: string;
+  recommended_action: string;
+  source: "rule_based" | "statistical" | "ml_model" | "manual";
+  engine_version: string;
+  signals: Record<string, unknown>;
+  created_at: string;
+};
+
+export type CreateHealthEventPayload = {
+  farmId: string;
+  animalId: string;
+  eventType: HealthEventType;
+  severity: HealthSeverity;
+  status: HealthEventStatus;
+  observedAt: string;
+  symptoms: string;
+  diagnosisNote?: string;
+  treatmentGiven?: string;
+  treatedBy?: string;
+  recoveryNotes?: string;
+  title?: string;
 };
 
 export type AnimalFilters = {

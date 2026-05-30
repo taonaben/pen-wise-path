@@ -15,18 +15,25 @@ import { useAnimal } from "../hooks/useAnimal";
 import { useAnimalAlerts } from "../hooks/useAnimalAlerts";
 import { useAnimalAuditLogs } from "../hooks/useAnimalAuditLogs";
 import { useAnimalFeedAllocations } from "../hooks/useAnimalFeedAllocations";
+import { useAnimalHealthAssessment } from "../hooks/useAnimalHealthAssessment";
 import { useAnimalHealthEvents } from "../hooks/useAnimalHealthEvents";
 import { useAnimalPen } from "../hooks/useAnimalPen";
 import { useAnimalWeights } from "../hooks/useAnimalWeights";
+import { useCreateHealthEvent } from "../hooks/useCreateHealthEvent";
+import { useGenerateHealthAssessments } from "../hooks/useGenerateHealthAssessments";
 import { useGenerateGrowthAlerts } from "../hooks/useGenerateGrowthAlerts";
 import { calculateAnimalDetailMetrics } from "../services/animalAnalyticsService";
+import type { CreateHealthEventPayload } from "../types/animal.types";
 
 export function AnimalDetailPage({ animalId }: { animalId: string }) {
   const { currentFarm } = useCurrentFarm();
   const generateGrowthAlerts = useGenerateGrowthAlerts(currentFarm.id);
+  const generateHealthAssessments = useGenerateHealthAssessments(currentFarm.id);
+  const createHealthEvent = useCreateHealthEvent(currentFarm.id, animalId);
   const animalQuery = useAnimal(currentFarm.id, animalId);
   const weightQuery = useAnimalWeights(currentFarm.id, animalId);
   const feedQuery = useAnimalFeedAllocations(currentFarm.id, animalId);
+  const healthAssessmentQuery = useAnimalHealthAssessment(currentFarm.id, animalId);
   const healthQuery = useAnimalHealthEvents(currentFarm.id, animalId);
   const alertQuery = useAnimalAlerts(currentFarm.id, animalId);
   const auditQuery = useAnimalAuditLogs(currentFarm.id, animalId);
@@ -56,6 +63,44 @@ export function AnimalDetailPage({ animalId }: { animalId: string }) {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Animal analysis failed";
       toast.error(message);
+    }
+  };
+
+  const onRunHealthAssessment = async () => {
+    try {
+      const result = await generateHealthAssessments.mutateAsync({
+        mode: "single_animal",
+        animalId,
+      });
+      const assessment = result.assessments.find((item) => item.animal_id === animalId);
+      if (assessment) {
+        toast.success(
+          `Health status updated: ${assessment.health_status} (${assessment.health_score}%).`,
+        );
+        return;
+      }
+      toast.success("Health assessment completed.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Health assessment failed";
+      toast.error(message);
+    }
+  };
+
+  const onAddHealthEvent = async (
+    payload: Omit<CreateHealthEventPayload, "farmId" | "animalId">,
+    runAssessmentAfterSave: boolean,
+  ) => {
+    try {
+      await createHealthEvent.mutateAsync(payload);
+      toast.success("Health event recorded.");
+
+      if (runAssessmentAfterSave) {
+        await onRunHealthAssessment();
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not save health event";
+      toast.error(message);
+      throw error;
     }
   };
 
@@ -142,7 +187,16 @@ export function AnimalDetailPage({ animalId }: { animalId: string }) {
             </TabsContent>
 
             <TabsContent value="health">
-              <AnimalHealthTab events={healthEvents} isLoading={healthQuery.isLoading} />
+              <AnimalHealthTab
+                assessment={healthAssessmentQuery.data ?? null}
+                isAssessmentLoading={healthAssessmentQuery.isLoading}
+                isRunningAssessment={generateHealthAssessments.isPending}
+                isCreatingEvent={createHealthEvent.isPending}
+                onRunAssessment={onRunHealthAssessment}
+                onAddHealthEvent={onAddHealthEvent}
+                events={healthEvents}
+                isLoading={healthQuery.isLoading}
+              />
             </TabsContent>
 
             <TabsContent value="predictions">

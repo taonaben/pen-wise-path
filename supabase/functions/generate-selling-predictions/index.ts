@@ -43,7 +43,11 @@ function parsePayload(payload: GenerateSellingPredictionsPayload): ParsedPayload
     .sort((a, b) => a - b);
 
   if (windows.length === 0) {
-    throw new HttpError("INVALID_PAYLOAD", "options.windows must include at least one non-negative number", 400);
+    throw new HttpError(
+      "INVALID_PAYLOAD",
+      "options.windows must include at least one non-negative number",
+      400,
+    );
   }
 
   const marketPriceMethod = payload.options?.market_price_method ?? "average_last_5";
@@ -126,6 +130,7 @@ Deno.serve(async (req) => {
         feedAllocations: data.feedByAnimal.get(animal.id) ?? [],
         marketPrices: data.marketPricesBySpecies.get(animal.species_id) ?? [],
         severeAlerts: data.alertsByAnimal.get(animal.id) ?? [],
+        healthAssessment: data.latestHealthByAnimal.get(animal.id),
         windows: parsed.windows,
         marketPriceMethod: parsed.marketPriceMethod,
       }),

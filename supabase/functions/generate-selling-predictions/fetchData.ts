@@ -4,6 +4,7 @@ import type {
   AlertRow,
   AnimalRow,
   FeedAllocationRow,
+  HealthAssessmentRow,
   MarketPriceRow,
   PredictionData,
   WeightRecordRow,
@@ -64,6 +65,7 @@ export async function fetchPredictionData(args: {
     { data: feedData, error: feedError },
     { data: marketData, error: marketError },
     { data: alertData, error: alertError },
+    { data: healthData, error: healthError },
   ] = await Promise.all([
     args.adminClient
       .from("weight_records")
@@ -73,7 +75,9 @@ export async function fetchPredictionData(args: {
       .order("recorded_at", { ascending: true }),
     args.adminClient
       .from("feeding_event_animals")
-      .select("animal_id,allocated_quantity_kg,allocated_cost,feeding_event:feeding_events(feeding_date)")
+      .select(
+        "animal_id,allocated_quantity_kg,allocated_cost,feeding_event:feeding_events(feeding_date)",
+      )
       .eq("farm_id", args.farmId)
       .in("animal_id", idsForQuery),
     args.adminClient
@@ -90,12 +94,31 @@ export async function fetchPredictionData(args: {
       .in("animal_id", idsForQuery)
       .in("status", ["open", "reviewing"])
       .in("severity", ["high", "critical"]),
+    args.adminClient
+      .from("health_assessments")
+      .select("animal_id,health_status,health_score,confidence_label,created_at")
+      .eq("farm_id", args.farmId)
+      .in("animal_id", idsForQuery)
+      .order("created_at", { ascending: false }),
   ]);
 
   if (weightError) throw new HttpError("PREDICTION_FAILED", weightError.message, 500);
   if (feedError) throw new HttpError("PREDICTION_FAILED", feedError.message, 500);
   if (marketError) throw new HttpError("PREDICTION_FAILED", marketError.message, 500);
   if (alertError) throw new HttpError("PREDICTION_FAILED", alertError.message, 500);
+  if (healthError) throw new HttpError("PREDICTION_FAILED", healthError.message, 500);
+
+  const latestHealthByAnimal = new Map<string, HealthAssessmentRow>();
+  for (const row of (healthData ?? []) as Array<HealthAssessmentRow & { created_at: string }>) {
+    if (!latestHealthByAnimal.has(row.animal_id)) {
+      latestHealthByAnimal.set(row.animal_id, {
+        animal_id: row.animal_id,
+        health_status: row.health_status,
+        health_score: row.health_score,
+        confidence_label: row.confidence_label,
+      });
+    }
+  }
 
   return {
     animals,
@@ -103,5 +126,6 @@ export async function fetchPredictionData(args: {
     feedByAnimal: groupBy((feedData ?? []) as FeedAllocationRow[], (row) => row.animal_id),
     marketPricesBySpecies: groupBy((marketData ?? []) as MarketPriceRow[], (row) => row.species_id),
     alertsByAnimal: groupBy((alertData ?? []) as AlertRow[], (row) => row.animal_id),
+    latestHealthByAnimal,
   };
 }

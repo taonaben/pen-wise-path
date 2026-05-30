@@ -1,4 +1,11 @@
-import type { AlertRow, ConfidenceResult, FeedAllocationRow, MarketPriceRow, WeightRecordRow } from "./types.ts";
+import type {
+  AlertRow,
+  ConfidenceResult,
+  FeedAllocationRow,
+  HealthAssessmentRow,
+  MarketPriceRow,
+  WeightRecordRow,
+} from "./types.ts";
 
 function daysSince(dateIso: string | null): number | null {
   if (!dateIso) return null;
@@ -12,6 +19,7 @@ export function calculatePredictionConfidence(args: {
   feedAllocations: FeedAllocationRow[];
   marketPrices: MarketPriceRow[];
   severeAlerts: AlertRow[];
+  healthAssessment?: HealthAssessmentRow;
 }): ConfidenceResult {
   let score = 1;
   const reasons: string[] = [];
@@ -53,6 +61,14 @@ export function calculatePredictionConfidence(args: {
   if (args.severeAlerts.length > 0) {
     score -= 0.18;
     reasons.push("active severe growth alert");
+  }
+
+  if (args.healthAssessment?.health_status === "critical") {
+    score -= 0.25;
+    reasons.push("critical health status");
+  } else if (args.healthAssessment?.health_status === "at_risk") {
+    score -= 0.15;
+    reasons.push("at-risk health status");
   }
 
   const bounded = Math.max(0, Math.min(1, score));

@@ -1,11 +1,6 @@
 export type GenerateSellingPredictionsMode = "farm_scan" | "single_animal";
 export type MarketPriceMethod = "latest" | "average_last_3" | "average_last_5";
-export type Recommendation =
-  | "SELL_NOW"
-  | "HOLD"
-  | "WATCH"
-  | "INSPECT_BEFORE_SELLING"
-  | "NOT_READY";
+export type Recommendation = "SELL_NOW" | "HOLD" | "WATCH" | "INSPECT_BEFORE_SELLING" | "NOT_READY";
 export type ConfidenceLabel = "High" | "Medium" | "Low";
 
 export type GenerateSellingPredictionsPayload = {
@@ -91,12 +86,20 @@ export type AlertRow = {
   status: string | null;
 };
 
+export type HealthAssessmentRow = {
+  animal_id: string;
+  health_status: "healthy" | "watch" | "at_risk" | "critical";
+  health_score: number;
+  confidence_label: ConfidenceLabel;
+};
+
 export type PredictionData = {
   animals: AnimalRow[];
   weightsByAnimal: Map<string, WeightRecordRow[]>;
   feedByAnimal: Map<string, FeedAllocationRow[]>;
   marketPricesBySpecies: Map<string, MarketPriceRow[]>;
   alertsByAnimal: Map<string, AlertRow[]>;
+  latestHealthByAnimal: Map<string, HealthAssessmentRow>;
 };
 
 export type PredictionWindow = {
