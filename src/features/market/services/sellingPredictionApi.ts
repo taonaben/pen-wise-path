@@ -1,6 +1,5 @@
 import { supabase } from "@/shared/lib/supabase";
-import { handleSupabaseError, requireData } from "@/shared/services/baseService";
-import { auditService } from "@/features/farm/services/auditService";
+import { handleSupabaseError } from "@/shared/services/baseService";
 import type {
   GenerateSellingPredictionsPayload,
   GenerateSellingPredictionsResponse,
@@ -178,52 +177,25 @@ export const sellingPredictionApi = {
     if (!(payload.pricePerKg > 0)) throw new Error("Price per kg must be greater than 0");
     if (!payload.soldAt) throw new Error("Sold date is required");
 
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError) handleSupabaseError(userError);
-
-    const totalAmount = payload.saleWeightKg * payload.pricePerKg;
-    const { data: saleData, error: saleError } = await db
-      .from("sales_records")
-      .insert({
+    const { data, error } = await supabase.functions.invoke("record-animal-sale", {
+      body: {
+        action: "create",
         farm_id: payload.farmId,
         animal_id: payload.animalId,
         sale_weight_kg: payload.saleWeightKg,
         price_per_kg: payload.pricePerKg,
-        total_amount: totalAmount,
+        price_basis: "live_weight",
+        currency: "USD",
         sold_at: payload.soldAt,
         buyer_name: payload.buyerName?.trim() || null,
         notes: payload.notes?.trim() || null,
-        created_by: userData.user?.id ?? null,
-      })
-      .select("*")
-      .single();
-
-    if (saleError) handleSupabaseError(saleError);
-
-    const { error: animalError } = await db
-      .from("animals")
-      .update({ status: "sold", updated_at: new Date().toISOString() })
-      .eq("farm_id", payload.farmId)
-      .eq("id", payload.animalId);
-
-    if (animalError) handleSupabaseError(animalError);
-
-    const sale = requireData(saleData, "Sale insert returned no data") as { id: string };
-    await auditService.createAuditLog({
-      farmId: payload.farmId,
-      action: "ANIMAL_MARKED_SOLD_FROM_PREDICTION",
-      entityType: "sales_record",
-      entityId: sale.id,
-      description: "Marked animal as sold from selling prediction.",
-      metadata: {
-        animal_id: payload.animalId,
         prediction_id: payload.predictionId,
-        sale_weight_kg: payload.saleWeightKg,
-        price_per_kg: payload.pricePerKg,
-        total_amount: totalAmount,
+        payment_status: "paid",
+        create_market_price: false,
       },
     });
 
-    return saleData;
+    if (error) handleSupabaseError(error);
+    return data;
   },
 };

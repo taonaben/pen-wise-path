@@ -53,6 +53,10 @@ export function AnimalPensPage() {
   const pens = pensQuery.data?.pens ?? [];
   const assignments = pensQuery.data?.assignments ?? [];
   const animals = animalsQuery.data?.animals ?? [];
+  const presentAnimals = useMemo(
+    () => animals.filter((animal) => ["active", "sick"].includes(animal.status)),
+    [animals],
+  );
 
   const currentPenByAnimal = useMemo(() => {
     const map = new Map<string, string>();
@@ -239,7 +243,7 @@ export function AnimalPensPage() {
         <div className="rounded-xl border bg-farm-800/80 p-4">
           <div className="text-xs text-farm-muted">Unassigned Animals</div>
           <div className="mt-2 text-xl font-semibold">
-            {Math.max(animals.length - assignments.length, 0)}
+            {Math.max(presentAnimals.length - assignments.length, 0)}
           </div>
         </div>
       </div>
@@ -291,7 +295,7 @@ export function AnimalPensPage() {
             </tr>
           </thead>
           <tbody>
-            {animals.map((animal) => {
+            {presentAnimals.map((animal) => {
               const currentPenId = currentPenByAnimal.get(animal.id) ?? "";
               return (
                 <tr key={animal.id} className="border-t border-farm-600/30">
@@ -328,8 +332,8 @@ export function AnimalPensPage() {
         {animalsQuery.isLoading && (
           <div className="p-5 text-sm text-farm-muted">Loading animals...</div>
         )}
-        {!animalsQuery.isLoading && animals.length === 0 && (
-          <div className="p-5 text-sm text-farm-muted">No animals found for this farm.</div>
+        {!animalsQuery.isLoading && presentAnimals.length === 0 && (
+          <div className="p-5 text-sm text-farm-muted">No active animals found for this farm.</div>
         )}
       </div>
     </div>

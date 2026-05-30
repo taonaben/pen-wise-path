@@ -2,9 +2,15 @@ import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
 import { toast } from "sonner";
-import { Brain, CircleDollarSign, Eye, Search, TrendingUp, TriangleAlert } from "lucide-react";
+import { Brain, CircleDollarSign, Eye, Menu, Search, TrendingUp, TriangleAlert, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -314,20 +320,29 @@ function PredictionsPage() {
                   </span>
                 </td>
                 <td className="px-5 py-3">
-                  <div className="flex flex-wrap gap-2">
-                    <Button type="button" size="sm" variant="outline" onClick={() => setDetailPrediction(row)}>View</Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => navigate({ to: "/animals/$id", params: { id: row.animalId } })}
-                    >
-                      Animal
-                    </Button>
-                    <Button type="button" size="sm" onClick={() => setSalePrediction(row)}>
-                      Mark Sold
-                    </Button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button type="button" size="icon" variant="ghost" aria-label="Prediction actions">
+                        <Menu className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem onClick={() => setDetailPrediction(row)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        View prediction
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => navigate({ to: "/animals/$id", params: { id: row.animalId } })}
+                      >
+                        <UserRound className="mr-2 h-4 w-4" />
+                        View animal
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSalePrediction(row)}>
+                        <CircleDollarSign className="mr-2 h-4 w-4" />
+                        Mark sold
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             ))}

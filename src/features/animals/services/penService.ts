@@ -5,6 +5,17 @@ import type { AnimalPenAssignment, Pen } from "../types/animal.types";
 // The project still uses placeholder generated DB types, so table queries need a local loose cast.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
+const presentAnimalStatuses = ["active", "sick"];
+
+type AnimalPenAssignmentRow = AnimalPenAssignment & {
+  animal?: { id: string; status: string | null } | null;
+};
+
+function onlyPresentAssignments(rows: AnimalPenAssignmentRow[]): AnimalPenAssignment[] {
+  return rows
+    .filter((row) => presentAnimalStatuses.includes(row.animal?.status ?? "active"))
+    .map(({ animal: _animal, ...assignment }) => assignment as AnimalPenAssignment);
+}
 
 type CreatePenPayload = {
   farmId: string;
@@ -38,40 +49,41 @@ export const penService = {
   async getActivePenAssignments(farmId: string, penId: string): Promise<AnimalPenAssignment[]> {
     const { data, error } = await db
       .from("animal_pen_assignments")
-      .select("*, pen:pens(*)")
+      .select("*, pen:pens(*), animal:animals(id,status)")
       .eq("farm_id", farmId)
       .eq("pen_id", penId)
       .is("ended_at", null)
       .order("started_at", { ascending: true });
 
     if (error) handleSupabaseError(error);
-    return (data ?? []) as AnimalPenAssignment[];
+    return onlyPresentAssignments((data ?? []) as AnimalPenAssignmentRow[]);
   },
 
   async getCurrentAssignmentsByFarm(farmId: string): Promise<AnimalPenAssignment[]> {
     const { data, error } = await db
       .from("animal_pen_assignments")
-      .select("*, pen:pens(*)")
+      .select("*, pen:pens(*), animal:animals(id,status)")
       .eq("farm_id", farmId)
       .is("ended_at", null)
       .order("started_at", { ascending: false })
       .order("created_at", { ascending: false });
 
     if (error) handleSupabaseError(error);
-    return (data ?? []) as AnimalPenAssignment[];
+    return onlyPresentAssignments((data ?? []) as AnimalPenAssignmentRow[]);
   },
 
   async getCurrentAnimalPen(farmId: string, animalId: string): Promise<AnimalPenAssignment | null> {
     const { data, error } = await db
       .from("animal_pen_assignments")
-      .select("*, pen:pens(*)")
+      .select("*, pen:pens(*), animal:animals(id,status)")
       .eq("farm_id", farmId)
       .eq("animal_id", animalId)
       .is("ended_at", null)
       .maybeSingle();
 
     if (error) handleSupabaseError(error);
-    return (data ?? null) as AnimalPenAssignment | null;
+    const rows = data ? onlyPresentAssignments([data as AnimalPenAssignmentRow]) : [];
+    return rows[0] ?? null;
   },
 
   async createPen(payload: CreatePenPayload): Promise<Pen> {

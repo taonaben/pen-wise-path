@@ -1,0 +1,96 @@
+PEN-WISE-PATH PROJECT HANDOFF INSTRUCTIONS
+
+1) PREREQUISITES
+- Node.js 20+ (recommended: latest LTS)
+- Bun (https://bun.sh)
+- Supabase CLI (https://supabase.com/docs/guides/cli)
+- Git
+
+Optional but recommended:
+- Docker Desktop (for local Supabase via `supabase start`)
+
+2) CLONE + OPEN PROJECT
+- Clone the repository:
+  git clone <repo-url>
+- Open the project folder:
+  cd pen-wise-path
+
+3) FRONTEND ENV SETUP (.env)
+- Create `.env` in the project root (or copy from `.env.example`).
+- Required variables:
+  VITE_SUPABASE_URL=your_supabase_project_url
+  VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+Notes:
+- The app reads these in `src/shared/lib/supabase.ts`.
+- Do not commit real keys to source control.
+
+4) INSTALL DEPENDENCIES
+- Install all project dependencies with Bun:
+  bun install
+
+5) SUPABASE PROJECT SETUP
+- Log in to Supabase CLI:
+  supabase login
+
+- Link this repo to a Supabase project:
+  supabase link --project-ref <your-project-ref>
+
+How to get project ref:
+- Supabase Dashboard > Project Settings > General > Reference ID
+
+6) PUSH DATABASE MIGRATIONS (REMOTE)
+- Apply all SQL migrations in `supabase/migrations`:
+  supabase db push
+
+This includes schema, RLS, and the seed migration that creates an initial owner user/farm/member only when no auth users exist.
+
+7) DEPLOY EDGE FUNCTIONS
+This project includes these functions:
+- generate-growth-alerts
+- generate-selling-predictions
+- invite-farm-member
+
+Deploy each function:
+  supabase functions deploy generate-growth-alerts --project-ref <your-project-ref>
+  supabase functions deploy generate-selling-predictions --project-ref <your-project-ref>
+  supabase functions deploy invite-farm-member --project-ref <your-project-ref>
+
+8) SET EDGE FUNCTION SECRETS
+Set required secrets for functions:
+  supabase secrets set SUPABASE_URL=https://<your-project-ref>.supabase.co --project-ref <your-project-ref>
+  supabase secrets set SUPABASE_ANON_KEY=<your-anon-key> --project-ref <your-project-ref>
+  supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key> --project-ref <your-project-ref>
+
+Additional invite function settings:
+  supabase secrets set SITE_URL=http://localhost:3000 --project-ref <your-project-ref>
+  supabase secrets set INVITE_REDIRECT_URL=http://localhost:3000/accept-invite --project-ref <your-project-ref>
+
+9) RUN THE PROJECT (DEV)
+- Start the app:
+  bun run dev
+
+- Open the URL shown in terminal (usually http://localhost:3000).
+
+10) OPTIONAL: LOCAL SUPABASE WORKFLOW
+If you want a fully local DB + functions setup:
+- Start local Supabase services:
+  supabase start
+
+- Rebuild local DB from migrations:
+  supabase db reset
+
+- Serve functions locally:
+  supabase functions serve invite-farm-member --env-file supabase/.env.local
+
+11) QUICK VERIFY CHECKLIST
+- `bun run dev` starts without errors.
+- App can load and read data from Supabase.
+- `supabase db push` completes successfully.
+- All 3 edge functions are deployed.
+- Required function secrets are set.
+
+12) TROUBLESHOOTING
+- If function calls fail with auth/config errors, re-check Supabase secrets.
+- If app fails to connect, verify `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env`.
+- If migrations fail, ensure the repo is linked to the correct Supabase project.
