@@ -214,6 +214,7 @@ export type AnimalCreatePayload = {
 export type AnimalUpdatePayload = Partial<Omit<AnimalCreatePayload, "farmId">> & {
   farmId: string;
   animalId: string;
+  status?: AnimalStatus;
 };
 
 export type AnimalViewModel = {

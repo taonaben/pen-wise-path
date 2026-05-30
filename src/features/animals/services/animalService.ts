@@ -263,6 +263,16 @@ export const animalService = {
     const breedName =
       payload.breedId === undefined ? undefined : await getBreedName(payload.breedId);
 
+    const { data: existingData, error: existingError } = await db
+      .from("animals")
+      .select("*")
+      .eq("farm_id", payload.farmId)
+      .eq("id", payload.animalId)
+      .single();
+
+    if (existingError) handleSupabaseError(existingError);
+    const existing = requireData(existingData, "Animal not found") as Animal;
+
     const updatePayload: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
@@ -281,6 +291,7 @@ export const animalService = {
     if (payload.purchaseWeightKg !== undefined)
       updatePayload.purchase_weight_kg = payload.purchaseWeightKg;
     if (payload.purchasePrice !== undefined) updatePayload.purchase_price = payload.purchasePrice;
+    if (payload.status !== undefined) updatePayload.status = payload.status;
     if (payload.notes !== undefined) updatePayload.notes = payload.notes?.trim() || null;
     if (payload.metadata !== undefined) updatePayload.metadata = payload.metadata;
 
@@ -293,6 +304,92 @@ export const animalService = {
       .single();
 
     if (error) handleSupabaseError(error);
-    return requireData(data, "Animal update returned no data") as Animal;
+    const updated = requireData(data, "Animal update returned no data") as Animal;
+
+    const changedFields = Object.keys(updatePayload).filter((field) => field !== "updated_at");
+    const isStatusOnlyChange = changedFields.length === 1 && changedFields[0] === "status";
+
+    await auditService.createAuditLog({
+      farmId: payload.farmId,
+      action: isStatusOnlyChange ? "change_status" : "update",
+      entityType: "animal",
+      entityId: updated.id,
+      description: isStatusOnlyChange
+        ? `Changed animal ${updated.tag_number} status from ${existing.status} to ${updated.status}`
+        : `Updated animal ${updated.tag_number}`,
+      metadata: {
+        changed_fields: changedFields,
+        before: {
+          tag_number: existing.tag_number,
+          species_id: existing.species_id,
+          breed_id: existing.breed_id,
+          sex: existing.sex,
+          purchase_date: existing.purchase_date,
+          purchase_weight_kg: existing.purchase_weight_kg,
+          purchase_price: existing.purchase_price,
+          acquisition_method: existing.acquisition_method,
+          status: existing.status,
+          notes: existing.notes,
+        },
+        after: {
+          tag_number: updated.tag_number,
+          species_id: updated.species_id,
+          breed_id: updated.breed_id,
+          sex: updated.sex,
+          purchase_date: updated.purchase_date,
+          purchase_weight_kg: updated.purchase_weight_kg,
+          purchase_price: updated.purchase_price,
+          acquisition_method: updated.acquisition_method,
+          status: updated.status,
+          notes: updated.notes,
+        },
+      },
+    });
+
+    return updated;
+  },
+
+  async deleteAnimal(args: { farmId: string; animalId: string }): Promise<void> {
+    const { data: existingData, error: existingError } = await db
+      .from("animals")
+      .select("*")
+      .eq("farm_id", args.farmId)
+      .eq("id", args.animalId)
+      .single();
+
+    if (existingError) handleSupabaseError(existingError);
+    const existing = requireData(existingData, "Animal not found") as Animal;
+
+    const { error } = await db
+      .from("animals")
+      .delete()
+      .eq("farm_id", args.farmId)
+      .eq("id", args.animalId);
+
+    if (error) handleSupabaseError(error);
+
+    await auditService.createAuditLog({
+      farmId: args.farmId,
+      action: "delete",
+      entityType: "animal",
+      entityId: existing.id,
+      description: `Deleted animal ${existing.tag_number}`,
+      metadata: {
+        deleted_animal: {
+          tag_number: existing.tag_number,
+          species_id: existing.species_id,
+          breed_id: existing.breed_id,
+          breed: existing.breed,
+          sex: existing.sex,
+          purchase_date: existing.purchase_date,
+          purchase_weight_kg: existing.purchase_weight_kg,
+          purchase_price: existing.purchase_price,
+          acquisition_method: existing.acquisition_method,
+          status: existing.status,
+          notes: existing.notes,
+          created_at: existing.created_at,
+        },
+      },
+    });
   },
 };

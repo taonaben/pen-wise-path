@@ -2,13 +2,21 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { getSpeciesConfig } from "../config/speciesConfig";
 import { useAnimalBreeds } from "../hooks/useAnimalBreeds";
 import { useCreateAnimal } from "../hooks/useCreateAnimal";
-import type { AnimalAcquisitionMethod, AnimalSex, AnimalSpecies } from "../types/animal.types";
+import { useUpdateAnimal } from "../hooks/useUpdateAnimal";
+import type {
+  AnimalAcquisitionMethod,
+  AnimalSex,
+  AnimalSpecies,
+  AnimalViewModel,
+} from "../types/animal.types";
 
 type Props = {
   farmId: string;
   species: AnimalSpecies[];
+  animal?: AnimalViewModel;
   onCancel: () => void;
-  onCreated: (animalId: string) => void;
+  onCreated?: (animalId: string) => void;
+  onUpdated?: () => void;
 };
 
 const fieldClass =
@@ -16,18 +24,28 @@ const fieldClass =
 const labelClass = "block space-y-2 text-sm";
 const labelTextClass = "block text-xs font-medium uppercase tracking-wide text-farm-muted";
 
-export function AnimalForm({ farmId, species, onCancel, onCreated }: Props) {
-  const [speciesId, setSpeciesId] = useState("");
-  const [breedId, setBreedId] = useState("");
-  const [tagNumber, setTagNumber] = useState("");
-  const [sex, setSex] = useState<AnimalSex>("male");
-  const [acquisitionMethod, setAcquisitionMethod] = useState<AnimalAcquisitionMethod>("purchased");
-  const [purchaseDate, setPurchaseDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [purchaseWeightKg, setPurchaseWeightKg] = useState("");
-  const [purchasePrice, setPurchasePrice] = useState("");
-  const [notes, setNotes] = useState("");
+export function AnimalForm({ farmId, species, animal, onCancel, onCreated, onUpdated }: Props) {
+  const isEditing = Boolean(animal);
+  const [speciesId, setSpeciesId] = useState(() => animal?.species?.id ?? "");
+  const [breedId, setBreedId] = useState(() => animal?.breed?.id ?? "");
+  const [tagNumber, setTagNumber] = useState(() => animal?.tagNumber ?? "");
+  const [sex, setSex] = useState<AnimalSex>(() => animal?.sex ?? "male");
+  const [acquisitionMethod, setAcquisitionMethod] = useState<AnimalAcquisitionMethod>(
+    () => animal?.acquisitionMethod ?? "purchased",
+  );
+  const [purchaseDate, setPurchaseDate] = useState(
+    () => animal?.purchaseDate ?? new Date().toISOString().slice(0, 10),
+  );
+  const [purchaseWeightKg, setPurchaseWeightKg] = useState(() =>
+    animal ? String(animal.purchaseWeightKg) : "",
+  );
+  const [purchasePrice, setPurchasePrice] = useState(() =>
+    animal ? String(animal.purchasePrice) : "",
+  );
+  const [notes, setNotes] = useState(() => animal?.notes ?? "");
 
   const createAnimal = useCreateAnimal(farmId);
+  const updateAnimal = useUpdateAnimal(farmId);
   const selectedSpecies = useMemo(
     () => species.find((item) => item.id === speciesId) ?? species[0],
     [species, speciesId],
@@ -40,8 +58,25 @@ export function AnimalForm({ farmId, species, onCancel, onCreated }: Props) {
   }, [species, speciesId]);
 
   useEffect(() => {
+    if (animal && animal.species?.id === speciesId) {
+      setBreedId(animal.breed?.id ?? "");
+      return;
+    }
     setBreedId("");
-  }, [speciesId]);
+  }, [animal, speciesId]);
+
+  useEffect(() => {
+    if (!animal) return;
+    setSpeciesId(animal.species?.id ?? "");
+    setBreedId(animal.breed?.id ?? "");
+    setTagNumber(animal.tagNumber);
+    setSex(animal.sex ?? "male");
+    setAcquisitionMethod(animal.acquisitionMethod);
+    setPurchaseDate(animal.purchaseDate);
+    setPurchaseWeightKg(String(animal.purchaseWeightKg));
+    setPurchasePrice(String(animal.purchasePrice));
+    setNotes(animal.notes ?? "");
+  }, [animal]);
 
   const canSubmit =
     Boolean(speciesId && tagNumber.trim() && purchaseDate) &&
@@ -49,13 +84,14 @@ export function AnimalForm({ farmId, species, onCancel, onCreated }: Props) {
     (acquisitionMethod === "bred_in_house"
       ? purchasePrice === "" || Number(purchasePrice) >= 0
       : purchasePrice !== "" && Number(purchasePrice) >= 0) &&
-    !createAnimal.isPending;
+    !createAnimal.isPending &&
+    !updateAnimal.isPending;
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!canSubmit) return;
 
-    const created = await createAnimal.mutateAsync({
+    const formPayload = {
       farmId,
       speciesId,
       breedId: breedId || null,
@@ -66,19 +102,33 @@ export function AnimalForm({ farmId, species, onCancel, onCreated }: Props) {
       purchaseWeightKg: Number(purchaseWeightKg),
       purchasePrice: Number(purchasePrice || 0),
       notes,
+    };
+
+    if (animal) {
+      await updateAnimal.mutateAsync({
+        ...formPayload,
+        animalId: animal.id,
+      });
+      onUpdated?.();
+      return;
+    }
+
+    const created = await createAnimal.mutateAsync({
+      ...formPayload,
       metadata: {},
     });
-
-    onCreated(created.id);
+    onCreated?.(created.id);
   };
 
   return (
     <form onSubmit={submit} className="rounded-xl border bg-farm-800/90 p-6">
       <div className="mb-6 grid gap-3 border-b border-farm-600/40 pb-5 md:grid-cols-[1fr_auto] md:items-start">
         <div>
-          <h2 className="text-lg font-semibold">Add Animal</h2>
+          <h2 className="text-lg font-semibold">{isEditing ? "Edit Animal" : "Add Animal"}</h2>
           <p className="text-sm text-farm-muted">
-            Create a livestock record and starting weight entry.
+            {isEditing
+              ? "Update animal details and keep an audit trail."
+              : "Create a livestock record and starting weight entry."}
           </p>
         </div>
         <div className="rounded-lg border border-farm-600/50 px-3 py-2 text-xs text-farm-muted">
@@ -217,9 +267,9 @@ export function AnimalForm({ farmId, species, onCancel, onCreated }: Props) {
         </label>
       </div>
 
-      {createAnimal.isError && (
+      {(createAnimal.isError || updateAnimal.isError) && (
         <div className="mt-4 rounded-lg border border-farm-danger/30 bg-farm-danger/10 p-3 text-sm text-farm-danger">
-          Animal could not be created. Check the form values and database migration.
+          Animal could not be saved. Check the form values and database migration.
         </div>
       )}
 
@@ -236,7 +286,11 @@ export function AnimalForm({ farmId, species, onCancel, onCreated }: Props) {
           disabled={!canSubmit}
           className="h-10 rounded-lg bg-farm-lime px-4 text-sm font-medium text-farm-950 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {createAnimal.isPending ? "Creating..." : "Create Animal"}
+          {createAnimal.isPending || updateAnimal.isPending
+            ? "Saving..."
+            : isEditing
+              ? "Save Changes"
+              : "Create Animal"}
         </button>
       </div>
     </form>

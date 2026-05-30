@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
 import { AnimalFilters } from "../components/AnimalFilters";
@@ -10,7 +18,13 @@ import { AnimalTable } from "../components/AnimalTable";
 import { useAnimalBreeds } from "../hooks/useAnimalBreeds";
 import { useAnimals } from "../hooks/useAnimals";
 import { useAnimalSpecies } from "../hooks/useAnimalSpecies";
-import type { AnimalFilters as AnimalFiltersValue } from "../types/animal.types";
+import { useDeleteAnimal } from "../hooks/useDeleteAnimal";
+import { useUpdateAnimal } from "../hooks/useUpdateAnimal";
+import type {
+  AnimalFilters as AnimalFiltersValue,
+  AnimalStatus,
+  AnimalViewModel,
+} from "../types/animal.types";
 
 export function AnimalsPage() {
   const navigate = useNavigate();
@@ -21,11 +35,43 @@ export function AnimalsPage() {
     sex: "all",
   });
   const [showForm, setShowForm] = useState(false);
+  const [editingAnimal, setEditingAnimal] = useState<AnimalViewModel | null>(null);
 
   const speciesQuery = useAnimalSpecies();
   const breedsQuery = useAnimalBreeds(filters.speciesId);
   const animalsQuery = useAnimals(currentFarm.id, filters);
+  const updateAnimal = useUpdateAnimal(currentFarm.id);
+  const deleteAnimal = useDeleteAnimal(currentFarm.id);
   const summary = animalsQuery.data?.summary;
+
+  const onChangeStatus = async (animal: AnimalViewModel, status: AnimalStatus) => {
+    try {
+      await updateAnimal.mutateAsync({
+        farmId: currentFarm.id,
+        animalId: animal.id,
+        status,
+      });
+      toast.success(`Animal status changed to ${status}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not change animal status";
+      toast.error(message);
+    }
+  };
+
+  const onDeleteAnimal = async (animal: AnimalViewModel) => {
+    const confirmed = window.confirm(
+      `Delete animal ${animal.tagNumber} from the database? This will also remove related records that cascade from the animal.`,
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteAnimal.mutateAsync(animal.id);
+      toast.success("Animal deleted and audit log recorded");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not delete animal";
+      toast.error(message);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -55,6 +101,32 @@ export function AnimalsPage() {
           }}
         />
       )}
+
+      <Dialog
+        open={Boolean(editingAnimal)}
+        onOpenChange={(open) => !open && setEditingAnimal(null)}
+      >
+        <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto bg-farm-900">
+          <DialogHeader>
+            <DialogTitle>Edit animal details</DialogTitle>
+            <DialogDescription>
+              Changes are written to the animal record and recorded in the farm audit log.
+            </DialogDescription>
+          </DialogHeader>
+          {editingAnimal && (
+            <AnimalForm
+              farmId={currentFarm.id}
+              species={speciesQuery.data ?? []}
+              animal={editingAnimal}
+              onCancel={() => setEditingAnimal(null)}
+              onUpdated={() => {
+                setEditingAnimal(null);
+                toast.success("Animal details updated");
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
         <AnimalSummaryCard title="Total Animals" value={summary?.total ?? 0} />
@@ -94,6 +166,10 @@ export function AnimalsPage() {
         <AnimalTable
           animals={animalsQuery.data?.animals ?? []}
           isLoading={animalsQuery.isLoading}
+          onViewAnimal={(animalId) => navigate({ to: "/animals/$id", params: { id: animalId } })}
+          onEditAnimal={setEditingAnimal}
+          onChangeStatus={onChangeStatus}
+          onDeleteAnimal={onDeleteAnimal}
         />
       )}
     </div>
