@@ -105,7 +105,7 @@ export function AnimalDetailPage({ animalId }: { animalId: string }) {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Link
           to="/animals"
@@ -118,7 +118,7 @@ export function AnimalDetailPage({ animalId }: { animalId: string }) {
           type="button"
           onClick={onAnalyzeAnimal}
           disabled={generateGrowthAlerts.isPending}
-          className="inline-flex h-10 items-center justify-center rounded-lg bg-farm-lime px-4 text-sm font-medium text-farm-950 disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-farm-lime px-4 text-sm font-medium text-farm-950 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
         >
           {generateGrowthAlerts.isPending ? "Analyzing..." : "Analyze Animal"}
         </button>
@@ -144,15 +144,15 @@ export function AnimalDetailPage({ animalId }: { animalId: string }) {
             currentPen={penQuery.data}
           />
 
-          <Tabs defaultValue="overview" className="space-y-5">
+          <Tabs defaultValue="overview" className="space-y-4">
             <div className="overflow-x-auto">
-              <TabsList className="h-auto min-w-max justify-start bg-farm-900/70 p-1">
+              <TabsList className="h-auto min-w-max justify-start bg-farm-900/70 p-0.5">
                 {["Overview", "Weight", "Feeding", "Health", "Predictions", "Activity"].map(
                   (tab) => (
                     <TabsTrigger
                       key={tab}
                       value={tab.toLowerCase()}
-                      className="data-[state=active]:bg-farm-700 data-[state=active]:text-foreground"
+                      className="min-h-9 whitespace-nowrap px-3 text-xs data-[state=active]:bg-farm-700 data-[state=active]:text-foreground sm:text-sm"
                     >
                       {tab}
                     </TabsTrigger>

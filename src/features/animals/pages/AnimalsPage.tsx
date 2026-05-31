@@ -74,7 +74,7 @@ export function AnimalsPage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
         <PageHeader
           title="Animals"
@@ -83,7 +83,7 @@ export function AnimalsPage() {
         <button
           type="button"
           onClick={() => setShowForm((value) => !value)}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-farm-lime px-4 text-sm font-medium text-farm-950"
+          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-farm-lime px-4 text-sm font-medium text-farm-950 sm:w-auto"
         >
           <Plus className="h-4 w-4" />
           Add Animal
@@ -106,7 +106,7 @@ export function AnimalsPage() {
         open={Boolean(editingAnimal)}
         onOpenChange={(open) => !open && setEditingAnimal(null)}
       >
-        <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto bg-farm-900">
+        <DialogContent className="h-[92vh] w-[calc(100vw-0.75rem)] max-w-5xl overflow-y-auto bg-farm-900 p-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:p-6">
           <DialogHeader>
             <DialogTitle>Edit animal details</DialogTitle>
             <DialogDescription>
@@ -128,7 +128,7 @@ export function AnimalsPage() {
         </DialogContent>
       </Dialog>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-6">
         <AnimalSummaryCard title="Total Animals" value={summary?.total ?? 0} />
         <AnimalSummaryCard title="Cattle" value={summary?.cattle ?? 0} />
         <AnimalSummaryCard title="Pigs" value={summary?.pigs ?? 0} />

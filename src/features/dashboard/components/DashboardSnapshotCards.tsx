@@ -13,12 +13,13 @@ type Props = {
 
 export function DashboardSnapshotCards({ activeAnimalsSummary, feedCost, predictions }: Props) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <StatCard
         title="Total Animals"
         value={String(activeAnimalsSummary?.total ?? 0)}
         description="Active in feedlot"
         icon={<Beef className="h-4 w-4" />}
+        density="compact"
       />
       <StatCard
         title="Average Daily Gain"
@@ -26,12 +27,14 @@ export function DashboardSnapshotCards({ activeAnimalsSummary, feedCost, predict
         description="Feed conversion trend"
         variant="success"
         icon={<TrendingUp className="h-4 w-4" />}
+        density="compact"
       />
       <StatCard
         title="Total Feed Cost"
         value={toCurrency(feedCost?.summary.totalFeedCost ?? 0)}
         description="Last 30 days"
         icon={<Wallet className="h-4 w-4" />}
+        density="compact"
       />
       <StatCard
         title="Underperforming"
@@ -39,6 +42,7 @@ export function DashboardSnapshotCards({ activeAnimalsSummary, feedCost, predict
         description="Need inspection"
         variant={(activeAnimalsSummary?.underperforming ?? 0) > 0 ? "warning" : "default"}
         icon={<AlertTriangle className="h-4 w-4" />}
+        density="compact"
       />
       <StatCard
         title="Projected Revenue"
@@ -48,12 +52,14 @@ export function DashboardSnapshotCards({ activeAnimalsSummary, feedCost, predict
         description="From current prediction set"
         variant="success"
         icon={<DollarSign className="h-4 w-4" />}
+        density="compact"
       />
       <StatCard
         title="Recommended Sales"
         value={String(predictions.filter((item) => item.recommendation === "SELL_NOW").length)}
         description="Within optimal window"
         icon={<Target className="h-4 w-4" />}
+        density="compact"
       />
     </div>
   );

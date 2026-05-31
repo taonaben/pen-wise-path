@@ -17,7 +17,7 @@ export function WeightRecordsPage() {
   const recordedRows = (rowsQuery.data ?? []).filter((row) => row.existingWeightKg !== null);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
         <PageHeader
           title="Weight Records"
@@ -26,14 +26,14 @@ export function WeightRecordsPage() {
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-farm-lime px-4 text-sm font-medium text-farm-950"
+          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-farm-lime px-4 text-sm font-medium text-farm-950 sm:w-auto"
         >
           <Plus className="h-4 w-4" />
           Record Weights
         </button>
       </div>
 
-      <div className="rounded-xl border bg-farm-800/80 p-4">
+      <div className="rounded-xl border bg-farm-800/80 p-3 sm:p-4">
         <label className="block max-w-xs space-y-2 text-sm">
           <span className="text-xs font-medium uppercase tracking-wide text-farm-muted">
             Weighing date
@@ -48,34 +48,78 @@ export function WeightRecordsPage() {
         </label>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border bg-farm-800/80">
-        <table className="w-full min-w-[760px] text-sm">
-          <thead className="bg-farm-900/60 text-xs uppercase tracking-wider text-farm-muted">
-            <tr>
-              {["Tag", "Species", "Breed", "Pen", "Weight", "Previous Weight"].map((heading) => (
-                <th key={heading} className="px-5 py-3 text-left font-medium">
-                  {heading}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {recordedRows.map((row) => (
-              <tr key={row.animalId} className="border-t border-farm-600/30">
-                <td className="px-5 py-3 font-mono text-farm-lime">{row.tagNumber}</td>
-                <td className="px-5 py-3">{row.speciesLabel}</td>
-                <td className="px-5 py-3">{row.breedLabel}</td>
-                <td className="px-5 py-3 text-farm-muted">{row.penName ?? "-"}</td>
-                <td className="px-5 py-3">{row.existingWeightKg?.toFixed(2)} kg</td>
-                <td className="px-5 py-3 text-farm-muted">
-                  {row.latestPreviousWeightKg === null
-                    ? "-"
-                    : `${row.latestPreviousWeightKg.toFixed(2)} kg (${row.latestPreviousWeightDate})`}
-                </td>
+      <div className="rounded-xl border bg-farm-800/80 p-2 sm:p-3">
+        <div className="space-y-2 md:hidden">
+          {recordedRows.map((row) => (
+            <div
+              key={row.animalId}
+              className="rounded-lg border border-farm-600/40 bg-farm-900/40 p-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="font-mono text-sm text-farm-lime">{row.tagNumber}</div>
+                  <div className="text-xs text-farm-muted">
+                    {row.speciesLabel} - {row.breedLabel}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-farm-muted">Pen</div>
+                  <div className="text-sm">{row.penName ?? "-"}</div>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                <div className="rounded-md border border-farm-600/40 bg-farm-950/40 p-2">
+                  <div className="text-xs text-farm-muted">Weight</div>
+                  <div>{row.existingWeightKg?.toFixed(2)} kg</div>
+                </div>
+                <div className="rounded-md border border-farm-600/40 bg-farm-950/40 p-2">
+                  <div className="text-xs text-farm-muted">Previous</div>
+                  <div>
+                    {row.latestPreviousWeightKg === null
+                      ? "-"
+                      : `${row.latestPreviousWeightKg.toFixed(2)} kg`}
+                  </div>
+                </div>
+              </div>
+              {row.latestPreviousWeightDate && (
+                <div className="mt-2 text-xs text-farm-muted">
+                  Previous recorded on {row.latestPreviousWeightDate}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
+          <table className="w-full min-w-190 text-sm">
+            <thead className="bg-farm-900/60 text-xs uppercase tracking-wider text-farm-muted">
+              <tr>
+                {["Tag", "Species", "Breed", "Pen", "Weight", "Previous Weight"].map((heading) => (
+                  <th key={heading} className="px-5 py-3 text-left font-medium">
+                    {heading}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {recordedRows.map((row) => (
+                <tr key={row.animalId} className="border-t border-farm-600/30">
+                  <td className="px-5 py-3 font-mono text-farm-lime">{row.tagNumber}</td>
+                  <td className="px-5 py-3">{row.speciesLabel}</td>
+                  <td className="px-5 py-3">{row.breedLabel}</td>
+                  <td className="px-5 py-3 text-farm-muted">{row.penName ?? "-"}</td>
+                  <td className="px-5 py-3">{row.existingWeightKg?.toFixed(2)} kg</td>
+                  <td className="px-5 py-3 text-farm-muted">
+                    {row.latestPreviousWeightKg === null
+                      ? "-"
+                      : `${row.latestPreviousWeightKg.toFixed(2)} kg (${row.latestPreviousWeightDate})`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
         {rowsQuery.isLoading && (
           <div className="p-5 text-sm text-farm-muted">Loading weight records...</div>
         )}

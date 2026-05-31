@@ -9,6 +9,12 @@ type Props = {
 
 export function AnimalSummaryCard({ title, value, description, variant = "default" }: Props) {
   return (
-    <StatCard title={title} value={String(value)} description={description} variant={variant} />
+    <StatCard
+      title={title}
+      value={String(value)}
+      description={description}
+      variant={variant}
+      density="compact"
+    />
   );
 }
