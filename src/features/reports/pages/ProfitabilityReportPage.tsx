@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download, FileText, RefreshCcw } from "lucide-react";
 import {
   Bar,
@@ -30,6 +30,7 @@ import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { formatMoney, formatPercent } from "../lib/format";
 import { exportCsv, exportPdf } from "../lib/reportExport";
 import { getDefaultReportFilters, getRangeForPreset } from "../lib/reportFilters";
+import { readReportStateFromUrl, writeReportStateToUrl } from "../lib/reportUrlState";
 import { useProfitabilityReport } from "../hooks/useProfitabilityReport";
 import { ReportChartCard } from "../components/ReportChartCard";
 import { ReportDataTable } from "../components/ReportDataTable";
@@ -47,11 +48,20 @@ export function ProfitabilityReportPage() {
   const speciesQuery = useAnimalSpecies();
   const pensQuery = usePens(currentFarm.id);
 
-  const [datePreset, setDatePreset] = useState<ReportDatePreset>("30");
-  const [filters, setFilters] = useState(getDefaultReportFilters);
+  const initialState = useMemo(
+    () =>
+      readReportStateFromUrl({ defaultFilters: getDefaultReportFilters(), defaultPreset: "30" }),
+    [],
+  );
+  const [datePreset, setDatePreset] = useState<ReportDatePreset>(initialState.preset);
+  const [filters, setFilters] = useState(initialState.filters);
 
   const reportQuery = useProfitabilityReport(currentFarm.id, filters);
   const report = reportQuery.data;
+
+  useEffect(() => {
+    writeReportStateToUrl({ filters, preset: datePreset });
+  }, [filters, datePreset]);
 
   const summaryItems = useMemo<ReportSummaryItem[]>(() => {
     if (!report) return [];
@@ -121,6 +131,8 @@ export function ProfitabilityReportPage() {
         { header: "Net Profit", value: (row) => row.netProfit },
         { header: "Margin", value: (row) => row.margin },
         { header: "Normalization", value: (row) => row.normalizedBasis },
+        { header: "Normalization Factor", value: (row) => row.normalizationFactor },
+        { header: "Normalization Source", value: (row) => row.normalizationSource },
       ],
     });
 

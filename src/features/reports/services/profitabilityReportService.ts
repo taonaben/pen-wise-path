@@ -18,7 +18,8 @@ type SaleRow = {
   sale_status: string;
   prediction_accuracy: string;
   price_basis: "live_weight" | "carcass_weight" | "per_head";
-  species: { name: string } | null;
+  species_id: string | null;
+  species: { id: string; slug: string; name: string } | null;
   animal: { tag_number: string } | null;
   prediction: {
     best_sell_date: string | null;
@@ -32,9 +33,30 @@ type PenAssignmentRow = {
   pen_id: string;
 };
 
+type NormalizationFactorRow = {
+  species_id: string | null;
+  carcass_to_live_ratio: number | string;
+  per_head_to_live_factor: number | string;
+};
+
+type NormalizationFactorSource = {
+  carcassToLiveRatio: number;
+  perHeadToLiveFactor: number;
+  source: "species_default" | "farm_default_override" | "farm_species_override";
+};
+
 // The project still uses placeholder generated DB types, so table queries need a local loose cast.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
+
+const defaultNormalizationBySpecies: Record<
+  string,
+  { carcassToLiveRatio: number; perHeadToLiveFactor: number }
+> = {
+  cattle: { carcassToLiveRatio: 0.62, perHeadToLiveFactor: 1 },
+  pigs: { carcassToLiveRatio: 0.72, perHeadToLiveFactor: 1 },
+  goats: { carcassToLiveRatio: 0.55, perHeadToLiveFactor: 1 },
+};
 
 function toNumber(value: number | string | null | undefined) {
   const parsed = Number(value ?? 0);
@@ -50,19 +72,60 @@ function monthKey(dateIso: string) {
   return dateIso.slice(0, 7);
 }
 
-function normalizeRevenue(row: SaleRow) {
+function getSpeciesDefaults(speciesSlug: string | null | undefined) {
+  if (speciesSlug && defaultNormalizationBySpecies[speciesSlug]) {
+    return defaultNormalizationBySpecies[speciesSlug];
+  }
+
+  return defaultNormalizationBySpecies.cattle;
+}
+
+function resolveNormalizationFactors(args: {
+  row: SaleRow;
+  farmDefaultFactor: NormalizationFactorSource | null;
+  speciesFactorById: Map<string, NormalizationFactorSource>;
+}): NormalizationFactorSource {
+  const speciesFactor = args.row.species_id
+    ? args.speciesFactorById.get(args.row.species_id)
+    : undefined;
+  if (speciesFactor) return speciesFactor;
+
+  if (args.farmDefaultFactor) return args.farmDefaultFactor;
+
+  const defaults = getSpeciesDefaults(args.row.species?.slug);
+  return {
+    carcassToLiveRatio: defaults.carcassToLiveRatio,
+    perHeadToLiveFactor: defaults.perHeadToLiveFactor,
+    source: "species_default",
+  };
+}
+
+function normalizeRevenue(row: SaleRow, factors: NormalizationFactorSource) {
   const gross = toNumber(row.gross_amount);
 
   if (row.price_basis === "carcass_weight") {
     return {
-      value: gross / 0.62,
-      basis: "estimated_live_weight_equivalent" as const,
+      value: gross / factors.carcassToLiveRatio,
+      basis: "carcass_live_weight_equivalent" as const,
+      factor: factors.carcassToLiveRatio,
+      source: factors.source,
+    };
+  }
+
+  if (row.price_basis === "per_head") {
+    return {
+      value: gross / factors.perHeadToLiveFactor,
+      basis: "per_head_live_weight_equivalent" as const,
+      factor: factors.perHeadToLiveFactor,
+      source: factors.source,
     };
   }
 
   return {
     value: gross,
     basis: "live_weight_equivalent" as const,
+    factor: 1,
+    source: factors.source,
   };
 }
 
@@ -107,7 +170,7 @@ export const profitabilityReportService = {
     let query = db
       .from("sales_records")
       .select(
-        "id, animal_id, sold_at, sale_weight_kg, gross_amount, purchase_cost, feed_cost, health_cost, other_cost, net_profit, profit_margin_percentage, sale_status, prediction_accuracy, price_basis, buyer_name, species:animal_species(name), animal:animals(tag_number), prediction:selling_predictions(best_sell_date, expected_profit)",
+        "id, animal_id, sold_at, sale_weight_kg, gross_amount, purchase_cost, feed_cost, health_cost, other_cost, net_profit, profit_margin_percentage, sale_status, prediction_accuracy, price_basis, buyer_name, species_id, species:animal_species(id, slug, name), animal:animals(tag_number), prediction:selling_predictions(best_sell_date, expected_profit)",
       )
       .eq("farm_id", farmId)
       .eq("sale_status", "completed")
@@ -140,13 +203,53 @@ export const profitabilityReportService = {
       rows = rows.filter((row) => penByAnimal.get(row.animal_id) === filters.penId);
     }
 
+    const speciesIds = [
+      ...new Set(
+        rows.map((row) => row.species_id).filter((value): value is string => Boolean(value)),
+      ),
+    ];
+    const { data: normalizationData, error: normalizationError } = await db
+      .from("report_normalization_factors")
+      .select("species_id, carcass_to_live_ratio, per_head_to_live_factor")
+      .eq("farm_id", farmId)
+      .eq("is_active", true)
+      .or(
+        speciesIds.length > 0
+          ? `species_id.is.null,species_id.in.(${speciesIds.join(",")})`
+          : "species_id.is.null",
+      );
+
+    if (normalizationError) handleSupabaseError(normalizationError);
+
+    const factorRows = (normalizationData ?? []) as NormalizationFactorRow[];
+    let farmDefaultFactor: NormalizationFactorSource | null = null;
+    const speciesFactorById = new Map<string, NormalizationFactorSource>();
+
+    for (const row of factorRows) {
+      const factorValue: NormalizationFactorSource = {
+        carcassToLiveRatio: toNumber(row.carcass_to_live_ratio),
+        perHeadToLiveFactor: toNumber(row.per_head_to_live_factor),
+        source: row.species_id ? "farm_species_override" : "farm_default_override",
+      };
+
+      if (row.species_id) {
+        speciesFactorById.set(row.species_id, factorValue);
+      } else {
+        farmDefaultFactor = factorValue;
+      }
+    }
+
     const soldRows = rows.map((row) => {
-      const normalized = normalizeRevenue(row);
-      const revenue = toNumber(row.gross_amount);
+      const factors = resolveNormalizationFactors({
+        row,
+        farmDefaultFactor,
+        speciesFactorById,
+      });
+      const normalized = normalizeRevenue(row, factors);
       const purchaseCost = toNumber(row.purchase_cost);
       const feedCost = toNumber(row.feed_cost);
       const otherCost = toNumber(row.health_cost) + toNumber(row.other_cost);
-      const netProfit = toNumber(row.net_profit);
+      const netProfit = normalized.value - (purchaseCost + feedCost + otherCost);
 
       return {
         saleId: row.id,
@@ -160,12 +263,14 @@ export const profitabilityReportService = {
         otherCost: round(otherCost, 2),
         netProfit: round(netProfit, 2),
         margin:
-          revenue > 0
-            ? round((netProfit / revenue) * 100, 2)
+          normalized.value > 0
+            ? round((netProfit / normalized.value) * 100, 2)
             : row.profit_margin_percentage === null
               ? null
               : round(toNumber(row.profit_margin_percentage), 2),
         normalizedBasis: normalized.basis,
+        normalizationFactor: round(normalized.factor, 4),
+        normalizationSource: normalized.source,
       };
     });
 
@@ -188,22 +293,28 @@ export const profitabilityReportService = {
 
     const groupedSpecies = new Map<string, number>();
     const groupedBuyer = new Map<string, number>();
+    const normalizedBySaleId = new Map(soldRows.map((row) => [row.saleId, row]));
 
     for (const row of rows) {
+      const normalizedRow = normalizedBySaleId.get(row.id);
       const species = row.species?.name ?? "Unknown";
       const buyer = row.buyer_name ?? "Unspecified buyer";
-      groupedSpecies.set(species, (groupedSpecies.get(species) ?? 0) + toNumber(row.net_profit));
-      groupedBuyer.set(buyer, (groupedBuyer.get(buyer) ?? 0) + toNumber(row.net_profit));
+      groupedSpecies.set(
+        species,
+        (groupedSpecies.get(species) ?? 0) + (normalizedRow?.netProfit ?? 0),
+      );
+      groupedBuyer.set(buyer, (groupedBuyer.get(buyer) ?? 0) + (normalizedRow?.netProfit ?? 0));
     }
 
     const withPredictions = rows.filter((row) => row.prediction !== null);
     const predictionRows = rows
       .filter((row) => row.prediction !== null)
       .map((row) => {
+        const normalizedRow = normalizedBySaleId.get(row.id);
         const predictedProfit = row.prediction?.expected_profit
           ? round(toNumber(row.prediction.expected_profit), 2)
           : null;
-        const actualProfit = round(toNumber(row.net_profit), 2);
+        const actualProfit = normalizedRow?.netProfit ?? round(toNumber(row.net_profit), 2);
 
         return {
           saleId: row.id,

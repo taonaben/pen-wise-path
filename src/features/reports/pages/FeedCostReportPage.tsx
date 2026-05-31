@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download, FileText, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { exportCsv, exportPdf } from "../lib/reportExport";
 import { getRangeForPreset } from "../lib/reportFilters";
+import { readReportStateFromUrl, writeReportStateToUrl } from "../lib/reportUrlState";
 import { ReportFilterBar } from "../components/ReportFilterBar";
 import type { ReportDatePreset, ReportFilters } from "../types/report.types";
 
@@ -37,10 +38,23 @@ export function FeedCostReportPage() {
   const speciesQuery = useAnimalSpecies();
   const pensQuery = usePens(currentFarm.id);
 
-  const [datePreset, setDatePreset] = useState<ReportDatePreset>("30");
-  const [filters, setFilters] = useState<FeedCostAnalysisFilters>(
-    getDefaultFeedCostAnalysisFilters,
+  const initialReportState = useMemo(
+    () =>
+      readReportStateFromUrl({
+        defaultFilters: {
+          ...getDefaultFeedCostAnalysisFilters(),
+          animalStatus: "all",
+        },
+        defaultPreset: "30",
+      }),
+    [],
   );
+  const [datePreset, setDatePreset] = useState<ReportDatePreset>(initialReportState.preset);
+  const [filters, setFilters] = useState<FeedCostAnalysisFilters>({
+    ...getDefaultFeedCostAnalysisFilters(),
+    ...initialReportState.filters,
+    animalStatus: initialReportState.filters.animalStatus,
+  });
 
   const analysisQuery = useFeedCostAnalysis(currentFarm.id, filters);
   const analysis = analysisQuery.data;
@@ -55,6 +69,10 @@ export function FeedCostReportPage() {
     }),
     [filters],
   );
+
+  useEffect(() => {
+    writeReportStateToUrl({ filters: reportFilters, preset: datePreset });
+  }, [reportFilters, datePreset]);
 
   const onPresetChange = (preset: ReportDatePreset) => {
     setDatePreset(preset);

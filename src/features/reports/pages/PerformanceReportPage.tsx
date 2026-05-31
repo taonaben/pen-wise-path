@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download, FileText, RefreshCcw } from "lucide-react";
 import {
   Bar,
@@ -33,6 +33,7 @@ import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { formatKg, formatNumber } from "../lib/format";
 import { exportCsv, exportPdf } from "../lib/reportExport";
 import { getDefaultReportFilters, getRangeForPreset } from "../lib/reportFilters";
+import { readReportStateFromUrl, writeReportStateToUrl } from "../lib/reportUrlState";
 import { usePerformanceReport } from "../hooks/usePerformanceReport";
 import { ReportChartCard } from "../components/ReportChartCard";
 import { ReportDataTable } from "../components/ReportDataTable";
@@ -51,11 +52,20 @@ export function PerformanceReportPage() {
   const { currentFarm } = useCurrentFarm();
   const speciesQuery = useAnimalSpecies();
   const pensQuery = usePens(currentFarm.id);
-  const [datePreset, setDatePreset] = useState<ReportDatePreset>("30");
-  const [filters, setFilters] = useState(getDefaultReportFilters);
+  const initialState = useMemo(
+    () =>
+      readReportStateFromUrl({ defaultFilters: getDefaultReportFilters(), defaultPreset: "30" }),
+    [],
+  );
+  const [datePreset, setDatePreset] = useState<ReportDatePreset>(initialState.preset);
+  const [filters, setFilters] = useState(initialState.filters);
 
   const reportQuery = usePerformanceReport(currentFarm.id, filters);
   const report = reportQuery.data;
+
+  useEffect(() => {
+    writeReportStateToUrl({ filters, preset: datePreset });
+  }, [filters, datePreset]);
 
   const summaryItems = useMemo<ReportSummaryItem[]>(() => {
     if (!report) return [];

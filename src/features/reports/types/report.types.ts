@@ -110,7 +110,12 @@ export type ProfitabilityReportData = {
     otherCost: number;
     netProfit: number;
     margin: number | null;
-    normalizedBasis: "live_weight_equivalent" | "estimated_live_weight_equivalent";
+    normalizedBasis:
+      | "live_weight_equivalent"
+      | "carcass_live_weight_equivalent"
+      | "per_head_live_weight_equivalent";
+    normalizationFactor: number;
+    normalizationSource: "species_default" | "farm_default_override" | "farm_species_override";
   }>;
   predictionRows: Array<{
     saleId: string;
