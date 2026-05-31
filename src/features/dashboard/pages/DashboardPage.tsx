@@ -37,10 +37,7 @@ import { DashboardSnapshotCards } from "../components/DashboardSnapshotCards";
 import { DashboardTrendsGrid } from "../components/DashboardTrendsGrid";
 import { readDashboardStateFromUrl, writeDashboardStateToUrl } from "../lib/dashboardUrlState";
 import type { DashboardActionItem, PenUtilizationItem } from "../types";
-import {
-  getDefaultDashboardFilters,
-  getLast30DaySalesFilters,
-} from "../types";
+import { getDefaultDashboardFilters, getLast30DaySalesFilters } from "../types";
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -362,7 +359,12 @@ export function DashboardPage() {
         title="Dashboard"
         description="Today’s feedlot performance, growth, and market signals at a glance."
         action={
-          <Button type="button" variant="outline" onClick={onRefreshAll} className="w-full sm:w-auto">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onRefreshAll}
+            className="w-full sm:w-auto"
+          >
             <RefreshCcw className="h-4 w-4" />
             Refresh
           </Button>

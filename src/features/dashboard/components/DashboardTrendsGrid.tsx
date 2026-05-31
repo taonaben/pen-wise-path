@@ -35,7 +35,13 @@ export function DashboardTrendsGrid({ salesAnalytics, feedCost }: Props) {
                   strokeWidth={2}
                   dot={false}
                 />
-                <Line type="monotone" dataKey="profit" stroke="#a3e635" strokeWidth={2} dot={false} />
+                <Line
+                  type="monotone"
+                  dataKey="profit"
+                  stroke="#a3e635"
+                  strokeWidth={2}
+                  dot={false}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>

@@ -24,13 +24,28 @@ export function DashboardQuickActionsCard({
     <div className="rounded-2xl border bg-farm-800/80 p-4 backdrop-blur-sm sm:p-5">
       <div className="mb-3 text-sm font-medium">Quick Actions</div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <Button type="button" variant="outline" onClick={onNavigateToWeights} className="w-full justify-start sm:justify-center">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onNavigateToWeights}
+          className="w-full justify-start sm:justify-center"
+        >
           Record Weight
         </Button>
-        <Button type="button" variant="outline" onClick={onNavigateToFeedRecords} className="w-full justify-start sm:justify-center">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onNavigateToFeedRecords}
+          className="w-full justify-start sm:justify-center"
+        >
           Record Feeding
         </Button>
-        <Button type="button" variant="outline" onClick={onNavigateToSales} className="w-full justify-start sm:justify-center">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onNavigateToSales}
+          className="w-full justify-start sm:justify-center"
+        >
           Record Sale
         </Button>
         <Button
