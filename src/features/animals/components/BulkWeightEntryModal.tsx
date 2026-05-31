@@ -150,9 +150,9 @@ function BulkWeightRowInput({
   ]);
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <input
-        className="h-9 w-32 rounded-md border border-farm-600/60 bg-farm-950/80 px-3 text-sm outline-none focus:border-farm-lime"
+        className="h-9 w-28 rounded-md border border-farm-600/60 bg-farm-950/80 px-3 text-sm outline-none focus:border-farm-lime sm:w-32"
         inputMode="decimal"
         value={value}
         placeholder="kg"
@@ -190,12 +190,12 @@ export function BulkWeightEntryModal({ farmId, initialDate, onClose }: Props) {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 p-4">
+    <div className="fixed inset-0 z-50 bg-black/70 p-2 sm:p-4">
       <div className="mx-auto flex h-full max-w-7xl flex-col rounded-xl border bg-farm-900 shadow-xl">
-        <div className="flex items-start justify-between gap-4 border-b border-farm-600/40 p-5">
+        <div className="flex items-start justify-between gap-3 border-b border-farm-600/40 p-4 sm:gap-4 sm:p-5">
           <div>
-            <h2 className="text-lg font-semibold">Record Weights</h2>
-            <p className="mt-1 text-sm text-farm-muted">
+            <h2 className="text-base font-semibold sm:text-lg">Record Weights</h2>
+            <p className="mt-1 text-xs text-farm-muted sm:text-sm">
               Enter weights by animal. Rows autosave 2 seconds after editing.
             </p>
           </div>
@@ -209,7 +209,7 @@ export function BulkWeightEntryModal({ farmId, initialDate, onClose }: Props) {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 border-b border-farm-600/40 p-4 lg:grid-cols-6">
+        <div className="grid grid-cols-1 gap-3 border-b border-farm-600/40 p-4 sm:grid-cols-2 xl:grid-cols-6">
           <input
             className={inputClass}
             type="date"
@@ -221,7 +221,7 @@ export function BulkWeightEntryModal({ farmId, initialDate, onClose }: Props) {
             }}
           />
           <input
-            className={`${inputClass} lg:col-span-2`}
+            className={`${inputClass} sm:col-span-2 xl:col-span-2`}
             placeholder="Search tag, breed, pen..."
             value={filters.search ?? ""}
             onChange={(event) =>
@@ -293,62 +293,112 @@ export function BulkWeightEntryModal({ farmId, initialDate, onClose }: Props) {
           </select>
         </div>
 
-        <div className="flex flex-wrap gap-3 border-b border-farm-600/40 px-4 py-3 text-xs text-farm-muted">
-          <span>{summary.shown} animals shown</span>
-          <span>{summary.entered} weights entered</span>
-          <span>{summary.saved} saved</span>
-          <span>{summary.errors} errors</span>
+        <div className="flex flex-wrap gap-2 border-b border-farm-600/40 px-4 py-3 text-xs text-farm-muted">
+          <span className="rounded-full border border-farm-600/40 bg-farm-950/60 px-2 py-1">
+            {summary.shown} animals shown
+          </span>
+          <span className="rounded-full border border-farm-600/40 bg-farm-950/60 px-2 py-1">
+            {summary.entered} weights entered
+          </span>
+          <span className="rounded-full border border-farm-600/40 bg-farm-950/60 px-2 py-1">
+            {summary.saved} saved
+          </span>
+          <span className="rounded-full border border-farm-600/40 bg-farm-950/60 px-2 py-1">
+            {summary.errors} errors
+          </span>
         </div>
 
         <div className="flex-1 overflow-auto">
-          <table className="w-full min-w-[980px] text-sm">
-            <thead className="sticky top-0 z-10 bg-farm-950 text-xs uppercase tracking-wider text-farm-muted">
-              <tr>
-                {[
-                  "Tag",
-                  "Species",
-                  "Breed",
-                  "Pen",
-                  "Last Weight",
-                  "Current Weight",
-                  "Save Status",
-                ].map((heading) => (
-                  <th key={heading} className="px-4 py-3 text-left font-medium">
-                    {heading}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.animalId} className="border-t border-farm-600/30 hover:bg-farm-800/60">
-                  <td className="px-4 py-3 font-mono text-farm-lime">{row.tagNumber}</td>
-                  <td className="px-4 py-3">{row.speciesLabel}</td>
-                  <td className="px-4 py-3">{row.breedLabel}</td>
-                  <td className="px-4 py-3 text-farm-muted">{row.penName ?? "-"}</td>
-                  <td className="px-4 py-3 text-farm-muted">
-                    {row.latestPreviousWeightKg === null
-                      ? "-"
-                      : `${row.latestPreviousWeightKg.toFixed(2)} kg (${row.latestPreviousWeightDate})`}
-                  </td>
-                  <td className="px-4 py-3">
-                    <BulkWeightRowInput
-                      farmId={farmId}
-                      recordedAt={recordedAt}
-                      row={row}
-                      onStatusChange={onStatusChange}
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <SaveStatus
-                      status={statuses[row.animalId]?.status ?? "idle"}
-                      message={statuses[row.animalId]?.message}
-                    />
-                  </td>
+          <div className="md:hidden space-y-2 p-3">
+            {rows.map((row) => (
+              <div
+                key={row.animalId}
+                className="rounded-lg border border-farm-600/40 bg-farm-900/60 p-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-mono text-sm text-farm-lime">{row.tagNumber}</div>
+                    <div className="text-xs text-farm-muted">
+                      {row.speciesLabel} • {row.breedLabel}
+                    </div>
+                  </div>
+                  <SaveStatus
+                    status={statuses[row.animalId]?.status ?? "idle"}
+                    message={statuses[row.animalId]?.message}
+                  />
+                </div>
+                <div className="mt-2 text-xs text-farm-muted">Pen: {row.penName ?? "-"}</div>
+                <div className="mt-1 text-xs text-farm-muted">
+                  Last:{" "}
+                  {row.latestPreviousWeightKg === null
+                    ? "-"
+                    : `${row.latestPreviousWeightKg.toFixed(2)} kg (${row.latestPreviousWeightDate})`}
+                </div>
+                <div className="mt-3">
+                  <BulkWeightRowInput
+                    farmId={farmId}
+                    recordedAt={recordedAt}
+                    row={row}
+                    onStatusChange={onStatusChange}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block">
+            <table className="w-full min-w-245 text-sm">
+              <thead className="sticky top-0 z-10 bg-farm-950 text-xs uppercase tracking-wider text-farm-muted">
+                <tr>
+                  {[
+                    "Tag",
+                    "Species",
+                    "Breed",
+                    "Pen",
+                    "Last Weight",
+                    "Current Weight",
+                    "Save Status",
+                  ].map((heading) => (
+                    <th key={heading} className="px-4 py-3 text-left font-medium">
+                      {heading}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr
+                    key={row.animalId}
+                    className="border-t border-farm-600/30 hover:bg-farm-800/60"
+                  >
+                    <td className="px-4 py-3 font-mono text-farm-lime">{row.tagNumber}</td>
+                    <td className="px-4 py-3">{row.speciesLabel}</td>
+                    <td className="px-4 py-3">{row.breedLabel}</td>
+                    <td className="px-4 py-3 text-farm-muted">{row.penName ?? "-"}</td>
+                    <td className="px-4 py-3 text-farm-muted">
+                      {row.latestPreviousWeightKg === null
+                        ? "-"
+                        : `${row.latestPreviousWeightKg.toFixed(2)} kg (${row.latestPreviousWeightDate})`}
+                    </td>
+                    <td className="px-4 py-3">
+                      <BulkWeightRowInput
+                        farmId={farmId}
+                        recordedAt={recordedAt}
+                        row={row}
+                        onStatusChange={onStatusChange}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <SaveStatus
+                        status={statuses[row.animalId]?.status ?? "idle"}
+                        message={statuses[row.animalId]?.message}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {rowsQuery.isLoading && (
             <div className="p-5 text-sm text-farm-muted">Loading animals...</div>

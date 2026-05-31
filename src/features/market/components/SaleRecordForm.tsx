@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -48,7 +49,8 @@ export function SaleRecordForm({ farmId, animals, initialSale, onSubmit, onCance
   const [submitting, setSubmitting] = useState(false);
 
   const draftQuery = useSaleDraftContext(farmId, animalId || undefined);
-  const selectedAnimal = draftQuery.data?.animal ?? animals.find((animal) => animal.id === animalId);
+  const selectedAnimal =
+    draftQuery.data?.animal ?? animals.find((animal) => animal.id === animalId);
 
   useEffect(() => {
     if (initialSale || !draftQuery.data) return;
@@ -76,7 +78,17 @@ export function SaleRecordForm({ farmId, animals, initialSale, onSubmit, onCance
     const marketComparison = market && market > 0 ? ((price - market) / market) * 100 : null;
 
     return { gross, purchaseCost, feedCost, totalCost, profit, margin, marketComparison };
-  }, [draftQuery.data, grossAmount, healthCost, initialSale, otherCost, priceBasis, pricePerKg, saleWeightKg, selectedAnimal]);
+  }, [
+    draftQuery.data,
+    grossAmount,
+    healthCost,
+    initialSale,
+    otherCost,
+    priceBasis,
+    pricePerKg,
+    saleWeightKg,
+    selectedAnimal,
+  ]);
 
   const submit = async () => {
     setSubmitting(true);
@@ -106,118 +118,249 @@ export function SaleRecordForm({ farmId, animals, initialSale, onSubmit, onCance
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-2">
-        <div>
-          <label className="text-xs font-medium text-farm-muted">Animal</label>
-          <Select value={animalId} onValueChange={setAnimalId} disabled={Boolean(initialSale)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select animal" />
-            </SelectTrigger>
-            <SelectContent>
-              {initialSale && (
-                <SelectItem value={initialSale.animalId}>{initialSale.tagNumber}</SelectItem>
-              )}
-              {animals.map((animal) => (
-                <SelectItem key={animal.id} value={animal.id}>
-                  {animal.tagNumber} - {animal.speciesLabel}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="text-xs font-medium text-farm-muted">Sale Date</label>
-          <Input type="date" value={soldAt} onChange={(event) => setSoldAt(event.target.value)} />
-        </div>
-        <div>
-          <label className="text-xs font-medium text-farm-muted">Buyer Name</label>
-          <Input value={buyerName} onChange={(event) => setBuyerName(event.target.value)} />
-        </div>
-        <div>
-          <label className="text-xs font-medium text-farm-muted">Buyer Contact</label>
-          <Input value={buyerContact} onChange={(event) => setBuyerContact(event.target.value)} />
-        </div>
-        <div>
-          <label className="text-xs font-medium text-farm-muted">Sale Weight</label>
-          <Input type="number" min="0" step="0.01" value={saleWeightKg} onChange={(event) => setSaleWeightKg(event.target.value)} />
-        </div>
-        <div>
-          <label className="text-xs font-medium text-farm-muted">Price Per Kg</label>
-          <Input type="number" min="0" step="0.01" value={pricePerKg} onChange={(event) => setPricePerKg(event.target.value)} />
-        </div>
-        <div>
-          <label className="text-xs font-medium text-farm-muted">Price Basis</label>
-          <Select value={priceBasis} onValueChange={(value) => setPriceBasis(value as SalesRecordPayload["priceBasis"])}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="live_weight">Live weight</SelectItem>
-              <SelectItem value="carcass_weight">Carcass weight</SelectItem>
-              <SelectItem value="per_head">Per head</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="text-xs font-medium text-farm-muted">Currency</label>
-          <Input value={currency} onChange={(event) => setCurrency(event.target.value.toUpperCase())} />
-        </div>
-        {priceBasis === "per_head" && (
+    <div className="space-y-4 pb-20 sm:pb-0">
+      <div className="rounded-xl border bg-farm-900/40 p-3 sm:p-4">
+        <div className="mb-3 text-sm font-medium">Sale Details</div>
+        <div className="grid gap-3 md:grid-cols-2">
           <div>
-            <label className="text-xs font-medium text-farm-muted">Gross Amount</label>
-            <Input type="number" min="0" step="0.01" value={grossAmount} onChange={(event) => setGrossAmount(event.target.value)} />
+            <label className="text-xs font-medium text-farm-muted">Animal</label>
+            <Select value={animalId} onValueChange={setAnimalId} disabled={Boolean(initialSale)}>
+              <SelectTrigger className="h-11">
+                <SelectValue placeholder="Select animal" />
+              </SelectTrigger>
+              <SelectContent>
+                {initialSale && (
+                  <SelectItem value={initialSale.animalId}>{initialSale.tagNumber}</SelectItem>
+                )}
+                {animals.map((animal) => (
+                  <SelectItem key={animal.id} value={animal.id}>
+                    {animal.tagNumber} - {animal.speciesLabel}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        )}
-        <div>
-          <label className="text-xs font-medium text-farm-muted">Health Cost</label>
-          <Input type="number" min="0" step="0.01" value={healthCost} onChange={(event) => setHealthCost(event.target.value)} />
-        </div>
-        <div>
-          <label className="text-xs font-medium text-farm-muted">Other Cost</label>
-          <Input type="number" min="0" step="0.01" value={otherCost} onChange={(event) => setOtherCost(event.target.value)} />
-        </div>
-        <div>
-          <label className="text-xs font-medium text-farm-muted">Payment Status</label>
-          <Select value={paymentStatus} onValueChange={(value) => setPaymentStatus(value as SalesRecordPayload["paymentStatus"])}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="partially_paid">Partially paid</SelectItem>
-              <SelectItem value="unpaid">Unpaid</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="md:col-span-2">
-          <label className="text-xs font-medium text-farm-muted">Notes</label>
-          <Input value={notes} onChange={(event) => setNotes(event.target.value)} />
+          <div>
+            <label className="text-xs font-medium text-farm-muted">Sale Date</label>
+            <Input
+              className="h-11"
+              type="date"
+              value={soldAt}
+              onChange={(event) => setSoldAt(event.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-farm-muted">Sale Weight</label>
+            <Input
+              className="h-11"
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
+              value={saleWeightKg}
+              onChange={(event) => setSaleWeightKg(event.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-farm-muted">Price Per Kg</label>
+            <Input
+              className="h-11"
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
+              value={pricePerKg}
+              onChange={(event) => setPricePerKg(event.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-farm-muted">Price Basis</label>
+            <Select
+              value={priceBasis}
+              onValueChange={(value) => setPriceBasis(value as SalesRecordPayload["priceBasis"])}
+            >
+              <SelectTrigger className="h-11">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="live_weight">Live weight</SelectItem>
+                <SelectItem value="carcass_weight">Carcass weight</SelectItem>
+                <SelectItem value="per_head">Per head</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-farm-muted">Currency</label>
+            <Input
+              className="h-11"
+              value={currency}
+              onChange={(event) => setCurrency(event.target.value.toUpperCase())}
+            />
+          </div>
+          {priceBasis === "per_head" && (
+            <div>
+              <label className="text-xs font-medium text-farm-muted">Gross Amount</label>
+              <Input
+                className="h-11"
+                type="number"
+                min="0"
+                step="0.01"
+                inputMode="decimal"
+                value={grossAmount}
+                onChange={(event) => setGrossAmount(event.target.value)}
+              />
+            </div>
+          )}
+          <div>
+            <label className="text-xs font-medium text-farm-muted">Payment Status</label>
+            <Select
+              value={paymentStatus}
+              onValueChange={(value) =>
+                setPaymentStatus(value as SalesRecordPayload["paymentStatus"])
+              }
+            >
+              <SelectTrigger className="h-11">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="partially_paid">Partially paid</SelectItem>
+                <SelectItem value="unpaid">Unpaid</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      <div className="rounded-xl border bg-farm-900/40 p-4">
-        <div className="grid gap-3 text-sm md:grid-cols-4">
-          <div><span className="text-farm-muted">Current/latest weight</span><div>{formatKg(selectedAnimal?.currentWeightKg ?? null)}</div></div>
-          <div><span className="text-farm-muted">Purchase cost</span><div>{formatCurrency(preview.purchaseCost, currency)}</div></div>
-          <div><span className="text-farm-muted">Feed cost</span><div>{formatCurrency(preview.feedCost, currency)}</div></div>
-          <div><span className="text-farm-muted">Latest market</span><div>{draftQuery.data?.latestMarketPrice ? `${formatCurrency(draftQuery.data.latestMarketPrice, currency)}/kg` : "-"}</div></div>
-          <div><span className="text-farm-muted">Gross amount</span><div>{formatCurrency(preview.gross, currency)}</div></div>
-          <div><span className="text-farm-muted">Total cost</span><div>{formatCurrency(preview.totalCost, currency)}</div></div>
-          <div><span className="text-farm-muted">Estimated profit</span><div className={preview.profit < 0 ? "text-farm-danger" : "text-farm-success"}>{formatCurrency(preview.profit, currency)}</div></div>
-          <div><span className="text-farm-muted">Market comparison</span><div>{preview.marketComparison === null ? "-" : `${preview.marketComparison.toFixed(1)}%`}</div></div>
+      <div className="rounded-xl border bg-farm-900/40 p-3 sm:p-4">
+        <div className="mb-3 text-sm font-medium">Buyer (Optional)</div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div>
+            <label className="text-xs font-medium text-farm-muted">Buyer Name</label>
+            <Input
+              className="h-11"
+              value={buyerName}
+              placeholder="e.g. Green Valley Traders"
+              onChange={(event) => setBuyerName(event.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-farm-muted">Buyer Contact</label>
+            <Input
+              className="h-11"
+              value={buyerContact}
+              placeholder="Phone or reference"
+              onChange={(event) => setBuyerContact(event.target.value)}
+            />
+          </div>
         </div>
-        <label className="mt-4 flex items-center gap-2 text-sm">
-          <Checkbox checked={createMarketPrice} onCheckedChange={(checked) => setCreateMarketPrice(Boolean(checked))} />
-          Use this sale as a verified market price record
+      </div>
+
+      <details className="rounded-xl border bg-farm-900/40 p-3 sm:p-4">
+        <summary className="cursor-pointer text-sm font-medium">Optional Costs & Notes</summary>
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <div>
+            <label className="text-xs font-medium text-farm-muted">Health Cost</label>
+            <Input
+              className="h-11"
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
+              value={healthCost}
+              onChange={(event) => setHealthCost(event.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-farm-muted">Other Cost</label>
+            <Input
+              className="h-11"
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
+              value={otherCost}
+              onChange={(event) => setOtherCost(event.target.value)}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-xs font-medium text-farm-muted">Notes</label>
+            <Textarea
+              value={notes}
+              rows={3}
+              placeholder="Any extra context about this sale"
+              onChange={(event) => setNotes(event.target.value)}
+            />
+          </div>
+        </div>
+      </details>
+
+      <div className="rounded-xl border bg-farm-900/40 p-3 sm:p-4">
+        <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-md border border-farm-600/40 bg-farm-950/50 p-2">
+            <span className="text-farm-muted">Current/latest weight</span>
+            <div>{formatKg(selectedAnimal?.currentWeightKg ?? null)}</div>
+          </div>
+          <div className="rounded-md border border-farm-600/40 bg-farm-950/50 p-2">
+            <span className="text-farm-muted">Purchase cost</span>
+            <div>{formatCurrency(preview.purchaseCost, currency)}</div>
+          </div>
+          <div className="rounded-md border border-farm-600/40 bg-farm-950/50 p-2">
+            <span className="text-farm-muted">Feed cost</span>
+            <div>{formatCurrency(preview.feedCost, currency)}</div>
+          </div>
+          <div className="rounded-md border border-farm-600/40 bg-farm-950/50 p-2">
+            <span className="text-farm-muted">Latest market</span>
+            <div>
+              {draftQuery.data?.latestMarketPrice
+                ? `${formatCurrency(draftQuery.data.latestMarketPrice, currency)}/kg`
+                : "-"}
+            </div>
+          </div>
+          <div className="rounded-md border border-farm-600/40 bg-farm-950/50 p-2">
+            <span className="text-farm-muted">Gross amount</span>
+            <div>{formatCurrency(preview.gross, currency)}</div>
+          </div>
+          <div className="rounded-md border border-farm-600/40 bg-farm-950/50 p-2">
+            <span className="text-farm-muted">Total cost</span>
+            <div>{formatCurrency(preview.totalCost, currency)}</div>
+          </div>
+          <div className="rounded-md border border-farm-600/40 bg-farm-950/50 p-2">
+            <span className="text-farm-muted">Estimated profit</span>
+            <div className={preview.profit < 0 ? "text-farm-danger" : "text-farm-success"}>
+              {formatCurrency(preview.profit, currency)}
+            </div>
+          </div>
+          <div className="rounded-md border border-farm-600/40 bg-farm-950/50 p-2">
+            <span className="text-farm-muted">Market comparison</span>
+            <div>
+              {preview.marketComparison === null ? "-" : `${preview.marketComparison.toFixed(1)}%`}
+            </div>
+          </div>
+        </div>
+        <label className="mt-4 flex items-start gap-2 text-sm">
+          <Checkbox
+            checked={createMarketPrice}
+            onCheckedChange={(checked) => setCreateMarketPrice(Boolean(checked))}
+          />
+          <span>Use this sale as a verified market price record</span>
         </label>
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button type="button" onClick={submit} disabled={submitting || !animalId}>
-          {submitting ? "Saving..." : initialSale ? "Update Sale" : "Record Sale"}
-        </Button>
+      <div className="sticky bottom-0 z-20 rounded-xl border border-farm-600/40 bg-farm-900/95 p-3 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0">
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={submit}
+            disabled={submitting || !animalId}
+            className="w-full sm:w-auto"
+          >
+            {submitting ? "Saving..." : initialSale ? "Update Sale" : "Record Sale"}
+          </Button>
+        </div>
       </div>
     </div>
   );

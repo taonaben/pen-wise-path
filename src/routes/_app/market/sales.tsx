@@ -32,10 +32,7 @@ import { SalesFilters } from "@/features/market/components/SalesFilters";
 import { SalesStatsCards } from "@/features/market/components/SalesStatsCards";
 import { SalesTable } from "@/features/market/components/SalesTable";
 import { formatCurrency } from "@/features/market/components/salesUiFormat";
-import {
-  useSalesAnalytics,
-  useSalesRecordActions,
-} from "@/features/market/hooks/useSalesRecords";
+import { useSalesAnalytics, useSalesRecordActions } from "@/features/market/hooks/useSalesRecords";
 import type {
   SalesFilters as SalesFilterState,
   SalesRecordPayload,
@@ -210,7 +207,9 @@ function SalesRecordsPage() {
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="font-semibold">Revenue and Profit Over Time</h2>
-              <p className="text-sm text-farm-muted">Weekly sales outcomes from filtered records.</p>
+              <p className="text-sm text-farm-muted">
+                Weekly sales outcomes from filtered records.
+              </p>
             </div>
           </div>
           <div className="h-72">
@@ -221,7 +220,10 @@ function SalesRecordsPage() {
                 <YAxis stroke="#94a3b8" fontSize={12} />
                 <Tooltip
                   formatter={(value) => formatCurrency(Number(value))}
-                  contentStyle={{ background: "#142018", border: "1px solid rgba(255,255,255,0.12)" }}
+                  contentStyle={{
+                    background: "#142018",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                  }}
                 />
                 <Legend />
                 <Bar dataKey="Revenue" fill="#a3e635" radius={[4, 4, 0, 0]} />
@@ -271,7 +273,7 @@ function SalesRecordsPage() {
       )}
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+        <DialogContent className="h-[92vh] w-[calc(100vw-0.75rem)] max-w-4xl overflow-y-auto p-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:p-6">
           <DialogHeader>
             <DialogTitle>{editingSale ? "Edit Sale" : "Record Sale"}</DialogTitle>
             <DialogDescription>
