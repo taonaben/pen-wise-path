@@ -7,7 +7,7 @@ type Props = {
 
 export function DashboardActionRequiredCard({ actions, onNavigate }: Props) {
   return (
-    <div className="rounded-2xl border bg-farm-800/80 p-5 backdrop-blur-sm">
+    <div className="rounded-2xl border bg-farm-800/80 p-4 backdrop-blur-sm sm:p-5">
       <div className="mb-3 text-sm font-medium">Action Required</div>
       {actions.length === 0 ? (
         <p className="text-sm text-farm-muted">No high-priority actions right now.</p>
@@ -20,7 +20,7 @@ export function DashboardActionRequiredCard({ actions, onNavigate }: Props) {
               onClick={() => onNavigate(item.route)}
               className="w-full rounded-lg border border-farm-600/40 bg-farm-900/50 p-3 text-left transition hover:bg-farm-900"
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                 <div>
                   <div className="text-sm font-medium text-foreground">{item.title}</div>
                   <div className="mt-1 text-xs text-farm-muted">{item.detail}</div>

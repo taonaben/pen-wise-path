@@ -1,5 +1,12 @@
 import type { SalesFilters } from "@/features/market/types/sales.types";
 
+export type DashboardFilters = {
+  startDate: string;
+  endDate: string;
+  speciesId?: string;
+  penId?: string;
+};
+
 export type DashboardActionItem = {
   id: string;
   title: string;
@@ -27,5 +34,16 @@ export function getLast30DaySalesFilters(): SalesFilters {
     saleStatus: "all",
     paymentStatus: "all",
     profitStatus: "all",
+  };
+}
+
+export function getDefaultDashboardFilters(): DashboardFilters {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - 29);
+
+  return {
+    startDate: startDate.toISOString().slice(0, 10),
+    endDate: endDate.toISOString().slice(0, 10),
   };
 }

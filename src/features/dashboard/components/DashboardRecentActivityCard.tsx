@@ -8,7 +8,7 @@ type Props = {
 
 export function DashboardRecentActivityCard({ canViewAuditLogs, auditLogs }: Props) {
   return (
-    <div className="rounded-2xl border bg-farm-800/80 p-5 backdrop-blur-sm">
+    <div className="rounded-2xl border bg-farm-800/80 p-4 backdrop-blur-sm sm:p-5">
       <div className="mb-3 text-sm font-medium">Recent Activity</div>
       {!canViewAuditLogs ? (
         <p className="text-sm text-farm-muted">You do not have permission to view audit logs.</p>

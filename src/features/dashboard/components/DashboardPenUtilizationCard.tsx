@@ -6,7 +6,7 @@ type Props = {
 
 export function DashboardPenUtilizationCard({ penUtilization }: Props) {
   return (
-    <div className="rounded-2xl border bg-farm-800/80 p-5 backdrop-blur-sm xl:col-span-1">
+    <div className="rounded-2xl border bg-farm-800/80 p-4 backdrop-blur-sm sm:p-5 xl:col-span-1">
       <div className="mb-3 text-sm font-medium">Top Pen Utilization</div>
       <div className="space-y-2">
         {penUtilization.length === 0 ? (

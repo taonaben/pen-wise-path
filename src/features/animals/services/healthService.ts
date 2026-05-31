@@ -41,6 +41,33 @@ export const healthService = {
     return (data ?? null) as HealthAssessment | null;
   },
 
+  async getLatestFarmHealthAssessments(
+    farmId: string,
+    animalIds?: string[],
+  ): Promise<HealthAssessment[]> {
+    let query = db
+      .from("health_assessments")
+      .select("*")
+      .eq("farm_id", farmId)
+      .order("created_at", { ascending: false });
+
+    if (animalIds && animalIds.length > 0) {
+      query = query.in("animal_id", animalIds);
+    }
+
+    const { data, error } = await query;
+    if (error) handleSupabaseError(error);
+
+    const latestByAnimal = new Map<string, HealthAssessment>();
+    for (const row of (data ?? []) as HealthAssessment[]) {
+      if (!latestByAnimal.has(row.animal_id)) {
+        latestByAnimal.set(row.animal_id, row);
+      }
+    }
+
+    return [...latestByAnimal.values()];
+  },
+
   async createHealthEvent(payload: CreateHealthEventPayload): Promise<HealthEvent> {
     const safeSymptoms = payload.symptoms.trim();
     const safeDiagnosis = payload.diagnosisNote?.trim() ?? "";

@@ -21,16 +21,16 @@ export function DashboardQuickActionsCard({
   onRunPredictionScan,
 }: Props) {
   return (
-    <div className="rounded-2xl border bg-farm-800/80 p-5 backdrop-blur-sm">
+    <div className="rounded-2xl border bg-farm-800/80 p-4 backdrop-blur-sm sm:p-5">
       <div className="mb-3 text-sm font-medium">Quick Actions</div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <Button type="button" variant="outline" onClick={onNavigateToWeights}>
+        <Button type="button" variant="outline" onClick={onNavigateToWeights} className="w-full justify-start sm:justify-center">
           Record Weight
         </Button>
-        <Button type="button" variant="outline" onClick={onNavigateToFeedRecords}>
+        <Button type="button" variant="outline" onClick={onNavigateToFeedRecords} className="w-full justify-start sm:justify-center">
           Record Feeding
         </Button>
-        <Button type="button" variant="outline" onClick={onNavigateToSales}>
+        <Button type="button" variant="outline" onClick={onNavigateToSales} className="w-full justify-start sm:justify-center">
           Record Sale
         </Button>
         <Button
@@ -38,6 +38,7 @@ export function DashboardQuickActionsCard({
           variant="outline"
           onClick={onRunGrowthScan}
           disabled={isRunningGrowthScan}
+          className="w-full justify-start sm:justify-center"
         >
           <AlertTriangle className="h-4 w-4" />
           {isRunningGrowthScan ? "Running..." : "Run Growth Scan"}
@@ -47,7 +48,7 @@ export function DashboardQuickActionsCard({
           variant="outline"
           onClick={onRunPredictionScan}
           disabled={isRunningPredictionScan}
-          className="sm:col-span-2"
+          className="w-full justify-start sm:col-span-2 sm:justify-center"
         >
           <Brain className="h-4 w-4" />
           {isRunningPredictionScan ? "Running..." : "Run Selling Predictions"}
