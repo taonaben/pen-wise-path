@@ -10,6 +10,7 @@ type Props = {
   trend?: string;
   icon?: ReactNode;
   variant?: Variant;
+  density?: "default" | "compact";
 };
 
 const accent: Record<Variant, string> = {
@@ -19,16 +20,58 @@ const accent: Record<Variant, string> = {
   danger: "text-farm-danger",
 };
 
-export function StatCard({ title, value, description, trend, icon, variant = "default" }: Props) {
+export function StatCard({
+  title,
+  value,
+  description,
+  trend,
+  icon,
+  variant = "default",
+  density = "default",
+}: Props) {
   return (
-    <div className="rounded-2xl border bg-farm-800/80 p-5 backdrop-blur-sm transition hover:bg-farm-800">
+    <div
+      className={cn(
+        "rounded-2xl border bg-farm-800/80 backdrop-blur-sm transition hover:bg-farm-800",
+        density === "compact" ? "p-3.5 sm:p-4" : "p-5",
+      )}
+    >
       <div className="flex items-start justify-between">
-        <div className="text-sm text-farm-muted">{title}</div>
-        {icon && <div className={cn("h-9 w-9 rounded-xl bg-farm-700/60 flex items-center justify-center", accent[variant])}>{icon}</div>}
+        <div
+          className={cn(
+            "text-farm-muted",
+            density === "compact" ? "text-xs sm:text-sm" : "text-sm",
+          )}
+        >
+          {title}
+        </div>
+        {icon && (
+          <div
+            className={cn(
+              "flex items-center justify-center bg-farm-700/60",
+              density === "compact" ? "h-8 w-8 rounded-lg" : "h-9 w-9 rounded-xl",
+              accent[variant],
+            )}
+          >
+            {icon}
+          </div>
+        )}
       </div>
-      <div className="mt-3 text-3xl font-semibold text-foreground tracking-tight">{value}</div>
+      <div
+        className={cn(
+          "font-semibold tracking-tight text-foreground",
+          density === "compact" ? "mt-2 text-2xl sm:text-[1.75rem]" : "mt-3 text-3xl",
+        )}
+      >
+        {value}
+      </div>
       {(description || trend) && (
-        <div className="mt-2 flex items-center gap-2 text-xs">
+        <div
+          className={cn(
+            "flex items-center gap-2 text-xs",
+            density === "compact" ? "mt-1.5" : "mt-2",
+          )}
+        >
           {trend && <span className={cn("font-medium", accent[variant])}>{trend}</span>}
           {description && <span className="text-farm-muted">{description}</span>}
         </div>

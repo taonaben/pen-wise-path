@@ -25,9 +25,9 @@ type Props = {
 
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="space-y-0.5">
       <div className="text-xs text-farm-muted">{label}</div>
-      <div className="font-medium text-foreground">{value}</div>
+      <div className="text-sm font-medium text-foreground">{value}</div>
     </div>
   );
 }
@@ -48,7 +48,7 @@ export function SaleDetailDialog({ farmId, sale, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+      <DialogContent className="h-[92vh] w-[calc(100vw-0.75rem)] max-w-4xl overflow-y-auto p-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:p-6">
         <DialogHeader>
           <DialogTitle>Sale Detail - {sale.tagNumber}</DialogTitle>
           <DialogDescription>
@@ -56,38 +56,69 @@ export function SaleDetailDialog({ farmId, sale, open, onOpenChange }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
-          <section className="rounded-xl border bg-farm-900/40 p-4">
-            <h3 className="mb-3 font-semibold">Sale Summary</h3>
-            <div className="grid gap-3 md:grid-cols-4">
+        <div className="space-y-3 sm:space-y-4">
+          <section className="rounded-xl border bg-farm-900/40 p-3 sm:p-4">
+            <h3 className="mb-2 text-sm font-semibold sm:mb-3 sm:text-base">Sale Summary</h3>
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
               <DetailItem label="Animal" value={sale.tagNumber} />
               <DetailItem label="Buyer" value={sale.buyerName} />
               <DetailItem label="Sale Date" value={sale.soldAt} />
               <DetailItem label="Payment" value={formatPaymentStatus(sale.paymentStatus)} />
               <DetailItem label="Sale Weight" value={formatKg(sale.saleWeightKg)} />
-              <DetailItem label="Price" value={`${formatCurrency(sale.pricePerKg, sale.currency)}/kg`} />
-              <DetailItem label="Gross Amount" value={formatCurrency(sale.grossAmount, sale.currency)} />
-              <DetailItem label="Profit Margin" value={formatPercent(sale.profitMarginPercentage)} />
+              <DetailItem
+                label="Price"
+                value={`${formatCurrency(sale.pricePerKg, sale.currency)}/kg`}
+              />
+              <DetailItem
+                label="Gross Amount"
+                value={formatCurrency(sale.grossAmount, sale.currency)}
+              />
+              <DetailItem
+                label="Profit Margin"
+                value={formatPercent(sale.profitMarginPercentage)}
+              />
             </div>
           </section>
 
-          <section className="rounded-xl border bg-farm-900/40 p-4">
-            <h3 className="mb-3 font-semibold">Animal Cost Breakdown</h3>
-            <div className="grid gap-3 md:grid-cols-4">
-              <DetailItem label="Purchase Cost" value={formatCurrency(sale.purchaseCost, sale.currency)} />
+          <section className="rounded-xl border bg-farm-900/40 p-3 sm:p-4">
+            <h3 className="mb-2 text-sm font-semibold sm:mb-3 sm:text-base">
+              Animal Cost Breakdown
+            </h3>
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+              <DetailItem
+                label="Purchase Cost"
+                value={formatCurrency(sale.purchaseCost, sale.currency)}
+              />
               <DetailItem label="Feed Cost" value={formatCurrency(sale.feedCost, sale.currency)} />
-              <DetailItem label="Health Cost" value={formatCurrency(sale.healthCost, sale.currency)} />
-              <DetailItem label="Other Cost" value={formatCurrency(sale.otherCost, sale.currency)} />
-              <DetailItem label="Total Cost" value={formatCurrency(sale.totalCost, sale.currency)} />
-              <DetailItem label="Net Profit" value={formatCurrency(sale.netProfit, sale.currency)} />
+              <DetailItem
+                label="Health Cost"
+                value={formatCurrency(sale.healthCost, sale.currency)}
+              />
+              <DetailItem
+                label="Other Cost"
+                value={formatCurrency(sale.otherCost, sale.currency)}
+              />
+              <DetailItem
+                label="Total Cost"
+                value={formatCurrency(sale.totalCost, sale.currency)}
+              />
+              <DetailItem
+                label="Net Profit"
+                value={formatCurrency(sale.netProfit, sale.currency)}
+              />
             </div>
           </section>
 
-          <section className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl border bg-farm-900/40 p-4">
-              <h3 className="mb-3 font-semibold">Prediction Comparison</h3>
-              <div className="space-y-2 text-sm">
-                <DetailItem label="Result" value={formatPredictionAccuracy(sale.predictionAccuracy)} />
+          <section className="grid gap-3 sm:gap-4 md:grid-cols-2">
+            <div className="rounded-xl border bg-farm-900/40 p-3 sm:p-4">
+              <h3 className="mb-2 text-sm font-semibold sm:mb-3 sm:text-base">
+                Prediction Comparison
+              </h3>
+              <div className="space-y-1.5 text-sm sm:space-y-2">
+                <DetailItem
+                  label="Result"
+                  value={formatPredictionAccuracy(sale.predictionAccuracy)}
+                />
                 <DetailItem
                   label="Predicted Date"
                   value={String(predictionComparison?.predicted_sell_date ?? "-")}
@@ -111,9 +142,11 @@ export function SaleDetailDialog({ farmId, sale, open, onOpenChange }: Props) {
               </div>
             </div>
 
-            <div className="rounded-xl border bg-farm-900/40 p-4">
-              <h3 className="mb-3 font-semibold">Market Price Comparison</h3>
-              <div className="space-y-2 text-sm">
+            <div className="rounded-xl border bg-farm-900/40 p-3 sm:p-4">
+              <h3 className="mb-2 text-sm font-semibold sm:mb-3 sm:text-base">
+                Market Price Comparison
+              </h3>
+              <div className="space-y-1.5 text-sm sm:space-y-2">
                 <DetailItem
                   label="Actual Price"
                   value={`${formatCurrency(sale.pricePerKg, sale.currency)}/kg`}
@@ -128,14 +161,18 @@ export function SaleDetailDialog({ farmId, sale, open, onOpenChange }: Props) {
                 />
                 <DetailItem
                   label="Difference"
-                  value={sale.marketComparisonPercentage === null ? "-" : `${sale.marketComparisonPercentage.toFixed(1)}%`}
+                  value={
+                    sale.marketComparisonPercentage === null
+                      ? "-"
+                      : `${sale.marketComparisonPercentage.toFixed(1)}%`
+                  }
                 />
               </div>
             </div>
           </section>
 
-          <section className="rounded-xl border bg-farm-900/40 p-4">
-            <h3 className="mb-3 font-semibold">Audit Trail</h3>
+          <section className="rounded-xl border bg-farm-900/40 p-3 sm:p-4">
+            <h3 className="mb-2 text-sm font-semibold sm:mb-3 sm:text-base">Audit Trail</h3>
             <div className="space-y-2 text-sm">
               {(auditQuery.data ?? []).length === 0 && (
                 <div className="text-farm-muted">No audit entries found for this sale.</div>

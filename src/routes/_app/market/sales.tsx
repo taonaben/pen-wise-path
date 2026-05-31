@@ -167,19 +167,24 @@ function SalesRecordsPage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <PageHeader
         title="Sales Records"
         description="Record sold animals, revenue, and profit outcomes."
         action={
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={() => exportCsv(rows)}>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => exportCsv(rows)}
+              className="w-full sm:w-auto"
+            >
               <Download className="h-4 w-4" />
               Export Report
             </Button>
             <Button
               type="button"
-              className="bg-farm-lime text-farm-950 hover:bg-farm-lime/90"
+              className="w-full bg-farm-lime text-farm-950 hover:bg-farm-lime/90 sm:w-auto"
               onClick={() => {
                 setEditingSale(null);
                 setFormOpen(true);
@@ -202,8 +207,8 @@ function SalesRecordsPage() {
 
       <SalesStatsCards summary={analytics.summary} />
 
-      <div className="grid gap-4 xl:grid-cols-[2fr_1fr]">
-        <div className="rounded-2xl border bg-farm-800/70 p-5">
+      <div className="grid gap-3 sm:gap-4 xl:grid-cols-[2fr_1fr]">
+        <div className="rounded-2xl border bg-farm-800/70 p-4 sm:p-5">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="font-semibold">Revenue and Profit Over Time</h2>
@@ -212,7 +217,7 @@ function SalesRecordsPage() {
               </p>
             </div>
           </div>
-          <div className="h-72">
+          <div className="h-64 sm:h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.18)" />
@@ -233,10 +238,10 @@ function SalesRecordsPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-farm-800/70 p-5">
+        <div className="rounded-2xl border bg-farm-800/70 p-4 sm:p-5">
           <h2 className="font-semibold">Buyer Performance</h2>
           <p className="text-sm text-farm-muted">Best buyers by revenue and price.</p>
-          <div className="mt-4 space-y-3">
+          <div className="mt-3 space-y-2.5 sm:mt-4 sm:space-y-3">
             {analytics.buyerPerformance.slice(0, 5).map((buyer) => (
               <div key={buyer.buyerName} className="rounded-xl bg-farm-900/50 p-3">
                 <div className="flex items-center justify-between gap-3">
