@@ -1,5 +1,5 @@
 import { useRouterState, useNavigate } from "@tanstack/react-router";
-import { Bell, LogOut } from "lucide-react";
+import { Bell, LogOut, Menu } from "lucide-react";
 import { sidebarConfig } from "@/shared/config/sidebar";
 import { authService } from "@/features/auth/services/authService";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
@@ -17,7 +17,11 @@ function deriveTitle(pathname: string): string {
   return "PenSmart";
 }
 
-export function Topbar() {
+type TopbarProps = {
+  onOpenMobileSidebar: () => void;
+};
+
+export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { currentFarm, currentRole } = useCurrentFarm();
@@ -39,6 +43,15 @@ export function Topbar() {
 
   return (
     <header className="h-16 border-b bg-farm-900/60 backdrop-blur-md flex items-center gap-4 px-6 sticky top-0 z-10">
+      <button
+        type="button"
+        onClick={onOpenMobileSidebar}
+        className="lg:hidden h-9 w-9 rounded-full bg-farm-800/70 border flex items-center justify-center text-farm-muted hover:text-foreground transition"
+        aria-label="Open sidebar"
+      >
+        <Menu className="h-4 w-4" />
+      </button>
+
       <div>
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
         <div className="text-[11px] text-farm-muted">{currentFarm.name}</div>

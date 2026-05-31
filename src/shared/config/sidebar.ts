@@ -5,7 +5,7 @@ import {
   Wheat,
   TrendingUp,
   FileBarChart2,
-  Settings,
+  UserRound,
   type LucideIcon,
 } from "lucide-react";
 import type { Permission } from "@/features/farm/services/permissionService";
@@ -67,5 +67,5 @@ export const sidebarConfig: SidebarItem[] = [
       { title: "Profitability", path: "/reports/profitability" },
     ],
   },
-  { title: "Settings", path: "/settings", icon: Settings },
+  { title: "Me", path: "/settings", icon: UserRound },
 ];
