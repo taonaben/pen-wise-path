@@ -44,16 +44,32 @@ How to get project ref:
 
 This includes schema, RLS, and the seed migration that creates an initial owner user/farm/member only when no auth users exist.
 
+Automated option:
+  bun run supabase:deploy -- --project-ref <your-project-ref>
+
+This links the repo to the project, runs `supabase db push`, and deploys all Edge Functions in `supabase/functions`.
+
+Useful variants:
+  bun run supabase:deploy -- --skip-link
+  bun run supabase:deploy -- --functions invite-farm-member,record-animal-sale
+  bun run supabase:deploy -- --skip-db
+
 7) DEPLOY EDGE FUNCTIONS
 This project includes these functions:
 - generate-growth-alerts
+- generate-health-assessments
+- generate-report-insights
 - generate-selling-predictions
 - invite-farm-member
+- record-animal-sale
 
 Deploy each function:
   supabase functions deploy generate-growth-alerts --project-ref <your-project-ref>
+  supabase functions deploy generate-health-assessments --project-ref <your-project-ref>
+  supabase functions deploy generate-report-insights --project-ref <your-project-ref>
   supabase functions deploy generate-selling-predictions --project-ref <your-project-ref>
   supabase functions deploy invite-farm-member --project-ref <your-project-ref>
+  supabase functions deploy record-animal-sale --project-ref <your-project-ref>
 
 8) SET EDGE FUNCTION SECRETS
 Set required secrets for functions:
