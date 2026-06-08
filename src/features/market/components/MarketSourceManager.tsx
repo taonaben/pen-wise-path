@@ -6,18 +6,12 @@ import { MarketSourceForm } from "./MarketSourceForm";
 type Props = {
   farmId: string;
   sources: MarketSource[];
-  onCreate: (payload: MarketSourcePayload) => Promise<void>;
+  onCreate: (payload: MarketSourcePayload) => Promise<MarketSource | void>;
   onUpdate: (sourceId: string, payload: MarketSourcePayload) => Promise<void>;
   onDeactivate: (sourceId: string) => Promise<void>;
 };
 
-export function MarketSourceManager({
-  farmId,
-  sources,
-  onCreate,
-  onUpdate,
-  onDeactivate,
-}: Props) {
+export function MarketSourceManager({ farmId, sources, onCreate, onUpdate, onDeactivate }: Props) {
   const [editingSource, setEditingSource] = useState<MarketSource | null>(null);
   const [showForm, setShowForm] = useState(false);
 
@@ -94,7 +88,9 @@ export function MarketSourceManager({
             ))}
           </tbody>
         </table>
-        {sources.length === 0 && <div className="p-4 text-sm text-farm-muted">No market sources yet.</div>}
+        {sources.length === 0 && (
+          <div className="p-4 text-sm text-farm-muted">No market sources yet.</div>
+        )}
       </div>
     </div>
   );

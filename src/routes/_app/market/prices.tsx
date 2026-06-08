@@ -114,10 +114,12 @@ function MarketPricesPage() {
 
   const onCreateSource = async (payload: MarketSourcePayload) => {
     try {
-      await sourceActions.createMarketSource.mutateAsync(payload);
+      const created = await sourceActions.createMarketSource.mutateAsync(payload);
       toast.success("Market source created");
+      return created;
     } catch {
       toast.error("Could not create market source");
+      return undefined;
     }
   };
 
@@ -271,7 +273,9 @@ function MarketPricesPage() {
             defaultSpeciesId={filters.speciesId}
             onSubmit={onSavePrice}
             onCancel={closePriceDialog}
-            onAddSource={() => setSourceDialogOpen(true)}
+            onCreateSource={onCreateSource}
+            onUpdateSource={onUpdateSource}
+            onDeactivateSource={onDeactivateSource}
           />
         </DialogContent>
       </Dialog>
