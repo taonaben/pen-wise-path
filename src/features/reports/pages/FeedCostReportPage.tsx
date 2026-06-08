@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Download, FileText, RefreshCcw } from "lucide-react";
+import { Download, FileText, RefreshCcw, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useAnimalSpecies } from "@/features/animals/hooks/useAnimalSpecies";
 import { usePens } from "@/features/animals/hooks/usePens";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
@@ -34,6 +35,7 @@ function todayStamp() {
 }
 
 export function FeedCostReportPage() {
+  const isMobile = useIsMobile();
   const { currentFarm } = useCurrentFarm();
   const speciesQuery = useAnimalSpecies();
   const pensQuery = usePens(currentFarm.id);
@@ -50,6 +52,7 @@ export function FeedCostReportPage() {
     [],
   );
   const [datePreset, setDatePreset] = useState<ReportDatePreset>(initialReportState.preset);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [filters, setFilters] = useState<FeedCostAnalysisFilters>({
     ...getDefaultFeedCostAnalysisFilters(),
     ...initialReportState.filters,
@@ -158,13 +161,27 @@ export function FeedCostReportPage() {
         }
       />
 
-      <ReportFilterBar
-        filters={reportFilters}
-        datePreset={datePreset}
-        options={{ species: speciesQuery.data ?? [], pens: pensQuery.data ?? [] }}
-        onPresetChange={onPresetChange}
-        onFiltersChange={onFiltersChange}
-      />
+      {isMobile && (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full justify-center gap-2 border-farm-600/50 bg-farm-800/70 text-foreground hover:bg-farm-700/60"
+          onClick={() => setShowMobileFilters((current) => !current)}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          {showMobileFilters ? "Hide Filters" : "Show Filters"}
+        </Button>
+      )}
+
+      {(!isMobile || showMobileFilters) && (
+        <ReportFilterBar
+          filters={reportFilters}
+          datePreset={datePreset}
+          options={{ species: speciesQuery.data ?? [], pens: pensQuery.data ?? [] }}
+          onPresetChange={onPresetChange}
+          onFiltersChange={onFiltersChange}
+        />
+      )}
 
       {analysisQuery.isLoading ? (
         <div className="rounded-xl border bg-farm-800/80 p-5 text-sm text-farm-muted">

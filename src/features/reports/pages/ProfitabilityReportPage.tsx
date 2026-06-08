@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Download, FileText, RefreshCcw } from "lucide-react";
+import { Download, FileText, RefreshCcw, SlidersHorizontal } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -13,6 +13,12 @@ import {
   YAxis,
 } from "recharts";
 import { toast } from "sonner";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -27,6 +33,7 @@ import { usePens } from "@/features/animals/hooks/usePens";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { formatMoney, formatPercent } from "../lib/format";
 import { exportCsv, exportPdf } from "../lib/reportExport";
 import { getDefaultReportFilters, getRangeForPreset } from "../lib/reportFilters";
@@ -44,6 +51,7 @@ function todayStamp() {
 }
 
 export function ProfitabilityReportPage() {
+  const isMobile = useIsMobile();
   const { currentFarm } = useCurrentFarm();
   const speciesQuery = useAnimalSpecies();
   const pensQuery = usePens(currentFarm.id);
@@ -55,6 +63,7 @@ export function ProfitabilityReportPage() {
   );
   const [datePreset, setDatePreset] = useState<ReportDatePreset>(initialState.preset);
   const [filters, setFilters] = useState(initialState.filters);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const reportQuery = useProfitabilityReport(currentFarm.id, filters);
   const report = reportQuery.data;
@@ -182,13 +191,27 @@ export function ProfitabilityReportPage() {
         }
       />
 
-      <ReportFilterBar
-        filters={filters}
-        datePreset={datePreset}
-        options={{ species: speciesQuery.data ?? [], pens: pensQuery.data ?? [] }}
-        onPresetChange={onPresetChange}
-        onFiltersChange={setFilters}
-      />
+      {isMobile && (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full justify-center gap-2 border-farm-600/50 bg-farm-800/70 text-foreground hover:bg-farm-700/60"
+          onClick={() => setShowMobileFilters((current) => !current)}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          {showMobileFilters ? "Hide Filters" : "Show Filters"}
+        </Button>
+      )}
+
+      {(!isMobile || showMobileFilters) && (
+        <ReportFilterBar
+          filters={filters}
+          datePreset={datePreset}
+          options={{ species: speciesQuery.data ?? [], pens: pensQuery.data ?? [] }}
+          onPresetChange={onPresetChange}
+          onFiltersChange={setFilters}
+        />
+      )}
 
       {reportQuery.isLoading ? (
         <div className="rounded-xl border bg-farm-800/80 p-5 text-sm text-farm-muted">
@@ -253,75 +276,237 @@ export function ProfitabilityReportPage() {
 
           <ReportInsightsPanel insights={report.insights} />
 
-          <ReportDataTable
-            title="Sold Animal Profit Table"
-            description="Per-animal profitability for completed sales in the selected period."
-          >
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Animal</TableHead>
-                  <TableHead>Species</TableHead>
-                  <TableHead>Sale Date</TableHead>
-                  <TableHead>Sale Weight</TableHead>
-                  <TableHead>Revenue</TableHead>
-                  <TableHead>Purchase Cost</TableHead>
-                  <TableHead>Feed Cost</TableHead>
-                  <TableHead>Other Cost</TableHead>
-                  <TableHead>Net Profit</TableHead>
-                  <TableHead>Margin</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {report.soldRows.map((row) => (
-                  <TableRow key={row.saleId}>
-                    <TableCell className="font-medium">{row.tagNumber}</TableCell>
-                    <TableCell>{row.speciesName}</TableCell>
-                    <TableCell>{row.soldAt}</TableCell>
-                    <TableCell>{row.saleWeightKg.toFixed(2)} kg</TableCell>
-                    <TableCell>{formatMoney(row.revenue)}</TableCell>
-                    <TableCell>{formatMoney(row.purchaseCost)}</TableCell>
-                    <TableCell>{formatMoney(row.feedCost)}</TableCell>
-                    <TableCell>{formatMoney(row.otherCost)}</TableCell>
-                    <TableCell>{formatMoney(row.netProfit)}</TableCell>
-                    <TableCell>{formatPercent(row.margin)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ReportDataTable>
+          {isMobile ? (
+            <Accordion
+              type="multiple"
+              defaultValue={["sold-profit", "prediction-accuracy"]}
+              className="rounded-2xl border border-farm-600/40 bg-farm-800/70 px-4 py-1"
+            >
+              <AccordionItem value="sold-profit" className="border-farm-600/35">
+                <AccordionTrigger className="py-3 text-sm font-semibold hover:no-underline data-[state=open]:text-farm-lime [&[data-state=open]>svg]:text-farm-lime">
+                  Sold Animal Profit Table
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <div className="text-xs text-farm-muted">
+                    Per-animal profitability for completed sales in the selected period.
+                  </div>
+                  <div className="mt-3 space-y-3 sm:hidden">
+                    {report.soldRows.map((row) => (
+                      <div
+                        key={row.saleId}
+                        className="rounded-xl border border-farm-500/45 bg-farm-900/65 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                      >
+                        <div className="mb-3 flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-semibold text-foreground">
+                              {row.tagNumber}
+                            </div>
+                            <div className="text-xs text-farm-muted">{row.speciesName}</div>
+                          </div>
+                          <span className="rounded-full bg-farm-700/70 px-2 py-1 text-xs font-medium text-farm-lime">
+                            {formatPercent(row.margin)}
+                          </span>
+                        </div>
 
-          <ReportDataTable
-            title="Prediction Accuracy Table"
-            description="Predicted selling window and profit versus actual outcomes."
-          >
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Animal</TableHead>
-                  <TableHead>Predicted Sell Window</TableHead>
-                  <TableHead>Actual Sale Date</TableHead>
-                  <TableHead>Predicted Profit</TableHead>
-                  <TableHead>Actual Profit</TableHead>
-                  <TableHead>Difference</TableHead>
-                  <TableHead>Accuracy Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {report.predictionRows.map((row) => (
-                  <TableRow key={`prediction-${row.saleId}`}>
-                    <TableCell className="font-medium">{row.tagNumber}</TableCell>
-                    <TableCell>{row.predictedSellWindow}</TableCell>
-                    <TableCell>{row.actualSaleDate}</TableCell>
-                    <TableCell>{formatMoney(row.predictedProfit)}</TableCell>
-                    <TableCell>{formatMoney(row.actualProfit)}</TableCell>
-                    <TableCell>{formatMoney(row.difference)}</TableCell>
-                    <TableCell>{row.accuracyStatus}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ReportDataTable>
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Sale Date
+                            </div>
+                            <div className="font-medium text-foreground">{row.soldAt}</div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Sale Weight
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {row.saleWeightKg.toFixed(2)} kg
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Revenue
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {formatMoney(row.revenue)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Net Profit
+                            </div>
+                            <div className="font-medium text-farm-lime">
+                              {formatMoney(row.netProfit)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Purchase Cost
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {formatMoney(row.purchaseCost)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Feed Cost
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {formatMoney(row.feedCost)}
+                            </div>
+                          </div>
+                          <div className="col-span-2">
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Other Cost
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {formatMoney(row.otherCost)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="prediction-accuracy" className="border-farm-600/35">
+                <AccordionTrigger className="py-3 text-sm font-semibold hover:no-underline data-[state=open]:text-farm-lime [&[data-state=open]>svg]:text-farm-lime">
+                  Prediction Accuracy Table
+                </AccordionTrigger>
+                <AccordionContent className="pb-1">
+                  <div className="text-xs text-farm-muted">
+                    Predicted selling window and profit versus actual outcomes.
+                  </div>
+                  <div className="mt-3 space-y-3 sm:hidden">
+                    {report.predictionRows.map((row) => (
+                      <div
+                        key={`prediction-${row.saleId}`}
+                        className="rounded-xl border border-farm-500/45 bg-farm-900/65 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                      >
+                        <div className="mb-3 flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-semibold text-foreground">
+                              {row.tagNumber}
+                            </div>
+                            <div className="text-xs text-farm-muted">{row.predictedSellWindow}</div>
+                          </div>
+                          <span className="rounded-full bg-farm-700/70 px-2 py-1 text-xs font-medium text-farm-lime">
+                            {row.accuracyStatus}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Actual Sale Date
+                            </div>
+                            <div className="font-medium text-foreground">{row.actualSaleDate}</div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Predicted Profit
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {formatMoney(row.predictedProfit)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Actual Profit
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {formatMoney(row.actualProfit)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Difference
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {formatMoney(row.difference)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          ) : (
+            <>
+              <ReportDataTable
+                title="Sold Animal Profit Table"
+                description="Per-animal profitability for completed sales in the selected period."
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Animal</TableHead>
+                      <TableHead>Species</TableHead>
+                      <TableHead>Sale Date</TableHead>
+                      <TableHead>Sale Weight</TableHead>
+                      <TableHead>Revenue</TableHead>
+                      <TableHead>Purchase Cost</TableHead>
+                      <TableHead>Feed Cost</TableHead>
+                      <TableHead>Other Cost</TableHead>
+                      <TableHead>Net Profit</TableHead>
+                      <TableHead>Margin</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {report.soldRows.map((row) => (
+                      <TableRow key={row.saleId}>
+                        <TableCell className="font-medium">{row.tagNumber}</TableCell>
+                        <TableCell>{row.speciesName}</TableCell>
+                        <TableCell>{row.soldAt}</TableCell>
+                        <TableCell>{row.saleWeightKg.toFixed(2)} kg</TableCell>
+                        <TableCell>{formatMoney(row.revenue)}</TableCell>
+                        <TableCell>{formatMoney(row.purchaseCost)}</TableCell>
+                        <TableCell>{formatMoney(row.feedCost)}</TableCell>
+                        <TableCell>{formatMoney(row.otherCost)}</TableCell>
+                        <TableCell>{formatMoney(row.netProfit)}</TableCell>
+                        <TableCell>{formatPercent(row.margin)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ReportDataTable>
+
+              <ReportDataTable
+                title="Prediction Accuracy Table"
+                description="Predicted selling window and profit versus actual outcomes."
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Animal</TableHead>
+                      <TableHead>Predicted Sell Window</TableHead>
+                      <TableHead>Actual Sale Date</TableHead>
+                      <TableHead>Predicted Profit</TableHead>
+                      <TableHead>Actual Profit</TableHead>
+                      <TableHead>Difference</TableHead>
+                      <TableHead>Accuracy Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {report.predictionRows.map((row) => (
+                      <TableRow key={`prediction-${row.saleId}`}>
+                        <TableCell className="font-medium">{row.tagNumber}</TableCell>
+                        <TableCell>{row.predictedSellWindow}</TableCell>
+                        <TableCell>{row.actualSaleDate}</TableCell>
+                        <TableCell>{formatMoney(row.predictedProfit)}</TableCell>
+                        <TableCell>{formatMoney(row.actualProfit)}</TableCell>
+                        <TableCell>{formatMoney(row.difference)}</TableCell>
+                        <TableCell>{row.accuracyStatus}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ReportDataTable>
+            </>
+          )}
         </>
       ) : null}
     </div>

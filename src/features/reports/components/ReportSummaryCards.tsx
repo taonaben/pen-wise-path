@@ -1,4 +1,13 @@
-import { Activity, AlertTriangle, Scale, Target, TrendingUp, Weight } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  BadgeDollarSign,
+  Scale,
+  Target,
+  TrendingUp,
+  Wallet,
+  Weight,
+} from "lucide-react";
 import { StatCard } from "@/shared/components/ui/StatCard";
 import type { ReportSummaryItem } from "../types/report.types";
 
@@ -14,6 +23,12 @@ export function ReportSummaryCards({ items }: Props) {
     "total-gain": <Scale className="h-4 w-4" />,
     underperforming: <AlertTriangle className="h-4 w-4" />,
     "ready-for-sale": <Target className="h-4 w-4" />,
+    revenue: <BadgeDollarSign className="h-4 w-4" />,
+    profit: <Wallet className="h-4 w-4" />,
+    "avg-profit": <TrendingUp className="h-4 w-4" />,
+    "avg-margin": <Scale className="h-4 w-4" />,
+    "unsold-projected": <Target className="h-4 w-4" />,
+    "prediction-accuracy": <Activity className="h-4 w-4" />,
   };
 
   return (
