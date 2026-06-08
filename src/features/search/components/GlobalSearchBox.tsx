@@ -1,7 +1,17 @@
 import { useMemo, useState } from "react";
 import type { ComponentType } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { AlertTriangle, Beef, ClipboardList, Search, Users, Wheat } from "lucide-react";
+import {
+  AlertTriangle,
+  Beef,
+  CalendarDays,
+  CircleDollarSign,
+  ClipboardList,
+  FileText,
+  Search,
+  Users,
+  Wheat,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useGlobalSearch } from "../hooks/useGlobalSearch";
@@ -17,6 +27,9 @@ const icons: Record<SearchResultType, ComponentType<{ className?: string }>> = {
   alert: AlertTriangle,
   audit_log: ClipboardList,
   feed_type: Wheat,
+  feeding_event: CalendarDays,
+  sale_record: CircleDollarSign,
+  report: FileText,
 };
 
 function groupResults(results: SearchResult[]) {
@@ -62,7 +75,7 @@ export function GlobalSearchBox(args: {
           search.setQuery(event.target.value);
           setOpen(true);
         }}
-        placeholder="Search animals, feed, members..."
+        placeholder="Search animals, feed, reports, sales, members..."
         className="w-full rounded-full bg-farm-800/70 border pl-9 pr-4 py-2 text-sm placeholder:text-farm-muted/70 focus:outline-none focus:ring-2 focus:ring-farm-lime/40"
       />
 
@@ -70,7 +83,7 @@ export function GlobalSearchBox(args: {
         <div className="absolute left-0 right-0 top-11 z-50 overflow-hidden rounded-xl border bg-farm-900 shadow-xl">
           {!hasQuery && (
             <div className="px-4 py-5 text-sm text-farm-muted">
-              Search animals, feed, members...
+              Search animals, feed, reports, sales, members...
             </div>
           )}
           {hasQuery && !canSearch && (

@@ -42,6 +42,32 @@ type FeedTypeSearchRow = {
   notes: string | null;
 };
 
+type FeedingEventSearchRow = {
+  id: string;
+  feeding_date: string;
+  feeding_method: "individual" | "pen_group";
+  quantity_kg: number | string | null;
+  notes: string | null;
+  feed_type: { name: string } | null;
+  pen: { name: string } | null;
+  feeding_event_animals: Array<{
+    animal: { tag_number: string | null } | null;
+  }>;
+};
+
+type SaleRecordSearchRow = {
+  id: string;
+  sold_at: string;
+  buyer_name: string | null;
+  sale_status: string | null;
+  payment_status: string | null;
+  total_amount: number | string | null;
+  net_profit: number | string | null;
+  notes: string | null;
+  animal: { tag_number: string | null } | null;
+  species: { name: string } | null;
+};
+
 function contains(value: unknown, query: string) {
   return String(value ?? "")
     .toLowerCase()
@@ -228,6 +254,160 @@ async function searchFeedTypes(args: GlobalSearchArgs): Promise<SearchResult[]> 
   }));
 }
 
+async function searchFeedingEvents(args: GlobalSearchArgs): Promise<SearchResult[]> {
+  const { data, error } = await db
+    .from("feeding_events")
+    .select(
+      `
+        id,
+        feeding_date,
+        feeding_method,
+        quantity_kg,
+        notes,
+        feed_type:feed_types(name),
+        pen:pens(name),
+        feeding_event_animals(
+          animal:animals(tag_number)
+        )
+      `,
+    )
+    .eq("farm_id", args.farmId)
+    .order("feeding_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) handleSupabaseError(error);
+
+  return cap(
+    ((data ?? []) as FeedingEventSearchRow[])
+      .filter((event) => {
+        const animalTags = (event.feeding_event_animals ?? [])
+          .map((allocation) => allocation.animal?.tag_number)
+          .join(" ");
+
+        return [
+          event.feed_type?.name,
+          event.pen?.name,
+          event.feeding_method,
+          event.notes,
+          event.feeding_date,
+          animalTags,
+        ].some((value) => contains(value, args.query));
+      })
+      .map((event) => {
+        const animalsFed = event.feeding_event_animals?.length ?? 0;
+        return {
+          id: event.id,
+          type: "feeding_event" as const,
+          group: "Feed",
+          title: event.feed_type?.name ?? "Feeding Event",
+          subtitle: [
+            event.feeding_date,
+            event.feeding_method === "pen_group" ? (event.pen?.name ?? "Pen") : "Individual",
+            `${animalsFed} animal${animalsFed === 1 ? "" : "s"}`,
+          ]
+            .filter(Boolean)
+            .join(" - "),
+          path: "/feed/records",
+          metadata: event,
+        };
+      }),
+    args.limit ?? 5,
+  );
+}
+
+async function searchSalesRecords(args: GlobalSearchArgs): Promise<SearchResult[]> {
+  const { data, error } = await db
+    .from("sales_records")
+    .select(
+      `
+        id,
+        sold_at,
+        buyer_name,
+        sale_status,
+        payment_status,
+        total_amount,
+        net_profit,
+        notes,
+        animal:animals(tag_number),
+        species:animal_species(name)
+      `,
+    )
+    .eq("farm_id", args.farmId)
+    .order("sold_at", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) handleSupabaseError(error);
+
+  return cap(
+    ((data ?? []) as SaleRecordSearchRow[])
+      .filter((sale) =>
+        [
+          sale.animal?.tag_number,
+          sale.species?.name,
+          sale.buyer_name,
+          sale.sale_status,
+          sale.payment_status,
+          sale.notes,
+        ].some((value) => contains(value, args.query)),
+      )
+      .map((sale) => ({
+        id: sale.id,
+        type: "sale_record" as const,
+        group: "Market Sales",
+        title: sale.animal?.tag_number ?? "Sale Record",
+        subtitle: [
+          sale.buyer_name,
+          sale.sale_status,
+          sale.total_amount ? `$${Number(sale.total_amount).toFixed(2)}` : null,
+        ]
+          .filter(Boolean)
+          .join(" - "),
+        path: "/market/sales",
+        metadata: sale,
+      })),
+    args.limit ?? 5,
+  );
+}
+
+function searchReportPages(args: GlobalSearchArgs): SearchResult[] {
+  const reportPages: SearchResult[] = [
+    {
+      id: "feed-cost",
+      type: "report",
+      group: "Reports",
+      title: "Feed Cost Report",
+      subtitle: "Feed spend, efficiency, and cost trends",
+      path: "/reports/feed-cost",
+      metadata: { keywords: ["feed", "cost", "efficiency", "fcr"] },
+    },
+    {
+      id: "performance",
+      type: "report",
+      group: "Reports",
+      title: "Performance Report",
+      subtitle: "Growth, weight gain, and conversion performance",
+      path: "/reports/performance",
+      metadata: { keywords: ["performance", "growth", "weight", "conversion"] },
+    },
+    {
+      id: "profitability",
+      type: "report",
+      group: "Reports",
+      title: "Profitability Report",
+      subtitle: "Profit margins and sale outcomes",
+      path: "/reports/profitability",
+      metadata: { keywords: ["profit", "margin", "sales", "revenue"] },
+    },
+  ];
+
+  return reportPages.filter((report) => {
+    const keywords = (report.metadata?.keywords as string[] | undefined)?.join(" ") ?? "";
+    return [report.title, report.subtitle, keywords].some((value) => contains(value, args.query));
+  });
+}
+
 export const searchService = {
   async globalSearch(args: GlobalSearchArgs): Promise<SearchResult[]> {
     const normalizedQuery = args.query.trim();
@@ -240,6 +420,9 @@ export const searchService = {
       searchAlerts(normalizedArgs),
       searchAuditLogs(normalizedArgs),
       searchFeedTypes(normalizedArgs),
+      searchFeedingEvents(normalizedArgs),
+      searchSalesRecords(normalizedArgs),
+      Promise.resolve(searchReportPages(normalizedArgs)),
     ]);
 
     return groups.flat();

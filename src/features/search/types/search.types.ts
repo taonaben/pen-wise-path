@@ -1,6 +1,14 @@
 import type { Permission } from "@/features/farm/services/permissionService";
 
-export type SearchResultType = "animal" | "member" | "alert" | "audit_log" | "feed_type";
+export type SearchResultType =
+  | "animal"
+  | "member"
+  | "alert"
+  | "audit_log"
+  | "feed_type"
+  | "feeding_event"
+  | "sale_record"
+  | "report";
 
 export type SearchResult = {
   id: string;

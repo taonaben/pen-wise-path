@@ -1,5 +1,6 @@
+import { useEffect, useState } from "react";
 import { useRouterState, useNavigate } from "@tanstack/react-router";
-import { Bell, LogOut, Menu } from "lucide-react";
+import { Bell, LogOut, Menu, Search } from "lucide-react";
 import { sidebarConfig } from "@/shared/config/sidebar";
 import { authService } from "@/features/auth/services/authService";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
@@ -24,6 +25,7 @@ type TopbarProps = {
 export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const { currentFarm, currentRole } = useCurrentFarm();
   const { permissions } = useFarmPermissions(currentRole);
   const title = deriveTitle(pathname);
@@ -35,6 +37,10 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
       .join("") || "F";
+
+  useEffect(() => {
+    setMobileSearchOpen(false);
+  }, [pathname]);
 
   const handleLogout = async () => {
     await authService.logout();
@@ -69,6 +75,15 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setMobileSearchOpen((open) => !open)}
+          className="md:hidden h-9 w-9 rounded-full bg-farm-800/70 border flex items-center justify-center text-farm-muted hover:text-foreground transition"
+          aria-label="Open search"
+          aria-expanded={mobileSearchOpen}
+        >
+          <Search className="h-4 w-4" />
+        </button>
         <button className="h-9 w-9 rounded-full bg-farm-800/70 border flex items-center justify-center text-farm-muted hover:text-foreground transition">
           <Bell className="h-4 w-4" />
         </button>
@@ -86,6 +101,20 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
           <LogOut className="h-4 w-4" />
         </button>
       </div>
+
+      {mobileSearchOpen && (
+        <div className="fixed left-3 right-3 top-18 z-50 md:hidden rounded-xl border bg-farm-900/95 p-2 shadow-xl backdrop-blur">
+          <GlobalSearchBox
+            className="w-full"
+            farmId={currentFarm.id}
+            permissions={{
+              viewAnimals: permissions.viewAnimals,
+              globalSearchMembers: permissions.globalSearchMembers,
+              globalSearchAuditLogs: permissions.globalSearchAuditLogs,
+            }}
+          />
+        </div>
+      )}
     </header>
   );
 }
