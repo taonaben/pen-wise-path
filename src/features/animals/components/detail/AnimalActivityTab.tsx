@@ -1,4 +1,5 @@
 import type { AuditLogViewModel } from "@/features/farm/types/farm.types";
+import { Activity } from "lucide-react";
 
 type Props = {
   logs: AuditLogViewModel[];
@@ -15,16 +16,19 @@ export function AnimalActivityTab({ logs, isLoading }: Props) {
         </p>
       </div>
 
-      <div className="divide-y divide-farm-600/30">
+      <div className="space-y-2 p-3 md:p-4">
         {logs.map((log) => (
-          <div key={log.id} className="grid gap-2 p-5 md:grid-cols-[1fr_auto]">
-            <div>
-              <div className="font-medium">{log.description}</div>
-              <p className="mt-1 text-sm text-farm-muted">
-                {log.actorName} - {log.action} - {log.entityType}
-              </p>
+          <div key={log.id} className="rounded-lg border border-farm-600/30 bg-farm-900/45 p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="font-medium">{log.description}</div>
+                <p className="mt-1 text-sm text-farm-muted">
+                  {log.actorName} - {log.action} - {log.entityType}
+                </p>
+              </div>
+              <Activity className="h-4 w-4 shrink-0 text-farm-lime" />
             </div>
-            <div className="text-sm text-farm-muted">{log.createdAt.slice(0, 16)}</div>
+            <div className="mt-2 text-xs text-farm-muted">{log.createdAt.slice(0, 16)}</div>
           </div>
         ))}
       </div>

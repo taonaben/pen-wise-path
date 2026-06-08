@@ -107,12 +107,18 @@ export function AnimalDetailPage({ animalId }: { animalId: string }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Link
-          to="/animals"
-          className="inline-flex items-center gap-1.5 text-sm text-farm-muted hover:text-farm-lime"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to animals
-        </Link>
+        <div className="space-y-1">
+          <Link
+            to="/animals"
+            className="inline-flex items-center gap-1.5 text-sm text-farm-muted hover:text-farm-lime"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to animals
+          </Link>
+          <p className="max-w-2xl text-xs text-farm-muted">
+            Runs growth analysis for this animal using weight trend, feed allocation, and alert
+            signals. Results appear in Overview Latest Alerts and the Growth Alerts page.
+          </p>
+        </div>
 
         <button
           type="button"
@@ -120,7 +126,7 @@ export function AnimalDetailPage({ animalId }: { animalId: string }) {
           disabled={generateGrowthAlerts.isPending}
           className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-farm-lime px-4 text-sm font-medium text-farm-950 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
         >
-          {generateGrowthAlerts.isPending ? "Analyzing..." : "Analyze Animal"}
+          {generateGrowthAlerts.isPending ? "Analyzing growth..." : "Run Growth Analysis"}
         </button>
       </div>
 
@@ -145,14 +151,14 @@ export function AnimalDetailPage({ animalId }: { animalId: string }) {
           />
 
           <Tabs defaultValue="overview" className="space-y-4">
-            <div className="overflow-x-auto">
-              <TabsList className="h-auto min-w-max justify-start bg-farm-900/70 p-0.5">
+            <div className="overflow-x-auto rounded-xl border border-farm-600/30 bg-farm-900/60 p-1">
+              <TabsList className="h-auto min-w-max justify-start gap-1 bg-transparent p-0">
                 {["Overview", "Weight", "Feeding", "Health", "Predictions", "Activity"].map(
                   (tab) => (
                     <TabsTrigger
                       key={tab}
                       value={tab.toLowerCase()}
-                      className="min-h-9 whitespace-nowrap px-3 text-xs data-[state=active]:bg-farm-700 data-[state=active]:text-foreground sm:text-sm"
+                      className="min-h-9 whitespace-nowrap rounded-lg px-3 text-xs data-[state=active]:bg-farm-700 data-[state=active]:text-foreground sm:text-sm"
                     >
                       {tab}
                     </TabsTrigger>

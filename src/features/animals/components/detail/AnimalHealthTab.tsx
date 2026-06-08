@@ -1,4 +1,13 @@
 import { useMemo, useState } from "react";
+import {
+  Activity,
+  AlertTriangle,
+  CalendarDays,
+  HeartPulse,
+  Scale,
+  ShieldAlert,
+  Wheat,
+} from "lucide-react";
 import { StatCard } from "@/shared/components/ui/StatCard";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import type {
@@ -183,7 +192,7 @@ export function AnimalHealthTab({
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
           <StatCard
             title="Health Status"
             value={assessment?.health_status.replace("_", " ") ?? "Not scanned"}
@@ -191,12 +200,14 @@ export function AnimalHealthTab({
               assessment ? assessment.summary : "Run assessment to calculate risk status."
             }
             variant={assessment ? healthStatusVariant[assessment.health_status] : "default"}
+            icon={<ShieldAlert className="h-4 w-4" />}
           />
           <StatCard
             title="AI Health Score"
             value={assessment ? `${assessment.health_score}%` : "--"}
             description={assessment ? `Risk level: ${assessment.risk_level}` : "No score yet"}
             variant={assessment ? healthStatusVariant[assessment.health_status] : "default"}
+            icon={<HeartPulse className="h-4 w-4" />}
           />
           <StatCard
             title="Confidence"
@@ -206,11 +217,13 @@ export function AnimalHealthTab({
                 ? `${Math.round(assessment.confidence_score * 100)}% confidence`
                 : "Confidence appears after first scan"
             }
+            icon={<Activity className="h-4 w-4" />}
           />
           <StatCard
             title="Last AI Scan"
             value={assessment ? formatDate(assessment.created_at) : "Not run"}
             description={assessment?.recommended_action ?? "Recommended action appears after scan."}
+            icon={<CalendarDays className="h-4 w-4" />}
           />
         </div>
 
@@ -230,27 +243,37 @@ export function AnimalHealthTab({
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 rounded-xl border bg-farm-800/80 p-4 sm:grid-cols-2 xl:grid-cols-5">
-        <div className="rounded-lg border border-farm-600/30 bg-farm-900/50 p-3">
-          <div className="text-xs text-farm-muted">Growth</div>
-          <div className="mt-1 text-sm font-medium">{signalSummary.growth}</div>
-        </div>
-        <div className="rounded-lg border border-farm-600/30 bg-farm-900/50 p-3">
-          <div className="text-xs text-farm-muted">Feed Intake</div>
-          <div className="mt-1 text-sm font-medium">{signalSummary.feedIntake}</div>
-        </div>
-        <div className="rounded-lg border border-farm-600/30 bg-farm-900/50 p-3">
-          <div className="text-xs text-farm-muted">FCR</div>
-          <div className="mt-1 text-sm font-medium">{signalSummary.fcr}</div>
-        </div>
-        <div className="rounded-lg border border-farm-600/30 bg-farm-900/50 p-3">
-          <div className="text-xs text-farm-muted">Active Alerts</div>
-          <div className="mt-1 text-sm font-medium">{signalSummary.activeAlerts}</div>
-        </div>
-        <div className="rounded-lg border border-farm-600/30 bg-farm-900/50 p-3">
-          <div className="text-xs text-farm-muted">Health Events (Open)</div>
-          <div className="mt-1 text-sm font-medium">{signalSummary.openHealthEvents}</div>
-        </div>
+      <div className="grid grid-cols-2 gap-3 rounded-xl border bg-farm-800/80 p-4 xl:grid-cols-5">
+        <StatCard
+          title="Growth"
+          value={signalSummary.growth}
+          icon={<Activity className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Feed Intake"
+          value={signalSummary.feedIntake}
+          icon={<Scale className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="FCR"
+          value={signalSummary.fcr}
+          icon={<Wheat className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Active Alerts"
+          value={signalSummary.activeAlerts}
+          icon={<AlertTriangle className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Health Events (Open)"
+          value={signalSummary.openHealthEvents}
+          icon={<CalendarDays className="h-4 w-4" />}
+          density="compact"
+        />
       </div>
 
       <div className="rounded-xl border bg-farm-800/80">

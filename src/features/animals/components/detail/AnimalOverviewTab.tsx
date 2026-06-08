@@ -1,3 +1,4 @@
+import { Activity, AlertTriangle, CircleDollarSign, Scale, TrendingUp, Wheat } from "lucide-react";
 import { StatCard } from "@/shared/components/ui/StatCard";
 import { GrowthStatusBadge } from "../GrowthStatusBadge";
 import { AnimalWeightTrendChart } from "./AnimalWeightTrendChart";
@@ -17,15 +18,55 @@ export function AnimalOverviewTab({ animal, metrics, weightRecords, alerts }: Pr
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Current Weight" value={formatKg(metrics.currentWeightKg)} />
-        <StatCard title="Total Gain" value={formatKg(metrics.totalGainKg)} />
-        <StatCard title="Average Daily Gain" value={formatKgPerDay(metrics.averageDailyGainKg)} />
-        <StatCard title="Total Feed Cost" value={formatMoney(metrics.totalFeedCost)} />
-        <StatCard title="Feed Consumed" value={formatKg(metrics.totalFeedConsumedKg)} />
-        <StatCard title="FCR" value={formatRatio(metrics.feedConversionRatio)} />
-        <StatCard title="Feed Cost / Kg Gained" value={formatMoney(metrics.feedCostPerKgGained)} />
-        <StatCard title="Estimated Margin" value={formatMoney(metrics.estimatedMargin)} />
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <StatCard
+          title="Current Weight"
+          value={formatKg(metrics.currentWeightKg)}
+          icon={<Scale className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Total Gain"
+          value={formatKg(metrics.totalGainKg)}
+          icon={<TrendingUp className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Average Daily Gain"
+          value={formatKgPerDay(metrics.averageDailyGainKg)}
+          icon={<Activity className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Total Feed Cost"
+          value={formatMoney(metrics.totalFeedCost)}
+          icon={<CircleDollarSign className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Feed Consumed"
+          value={formatKg(metrics.totalFeedConsumedKg)}
+          icon={<Wheat className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="FCR"
+          value={formatRatio(metrics.feedConversionRatio)}
+          icon={<Wheat className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Feed Cost / Kg Gained"
+          value={formatMoney(metrics.feedCostPerKgGained)}
+          icon={<CircleDollarSign className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Estimated Margin"
+          value={formatMoney(metrics.estimatedMargin)}
+          icon={<AlertTriangle className="h-4 w-4" />}
+          density="compact"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_360px]">

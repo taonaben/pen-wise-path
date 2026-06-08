@@ -1,6 +1,7 @@
 import { supabase } from "@/shared/lib/supabase";
 import { handleSupabaseError, requireData } from "@/shared/services/baseService";
 import { auditService } from "@/features/farm/services/auditService";
+import type { Profile } from "@/features/farm/types/farm.types";
 import type {
   MarketPrice,
   MarketPriceFilters,
@@ -57,6 +58,37 @@ function mapMarketPrice(row: MarketPrice): MarketPriceViewModel {
   };
 }
 
+function displayProfileName(profile: Profile | undefined, userId: string | null) {
+  if (!userId) return null;
+  return profile?.full_name || profile?.email || `User ${userId.slice(0, 8)}`;
+}
+
+async function getProfilesById(userIds: string[]) {
+  if (userIds.length === 0) return new Map<string, Profile>();
+
+  const { data, error } = await db
+    .from("profiles")
+    .select("id, full_name, email")
+    .in("id", userIds);
+  if (error) handleSupabaseError(error);
+
+  return new Map(((data ?? []) as Profile[]).map((profile) => [profile.id, profile]));
+}
+
+async function enrichRecordedBy(rows: MarketPriceViewModel[]) {
+  const userIds = [
+    ...new Set(
+      rows.map((row) => row.recordedBy).filter((value): value is string => Boolean(value)),
+    ),
+  ];
+  const profilesById = await getProfilesById(userIds);
+
+  return rows.map((row) => ({
+    ...row,
+    recordedBy: displayProfileName(profilesById.get(row.recordedBy ?? ""), row.recordedBy),
+  }));
+}
+
 function toDbPayload(payload: MarketPricePayload, userId?: string | null) {
   return {
     farm_id: payload.farmId,
@@ -103,7 +135,7 @@ export const marketPriceService = {
 
     const { data, error } = await query;
     if (error) handleSupabaseError(error);
-    return ((data ?? []) as MarketPrice[]).map(mapMarketPrice);
+    return enrichRecordedBy(((data ?? []) as MarketPrice[]).map(mapMarketPrice));
   },
 
   async getLatestMarketPrice(
@@ -156,7 +188,9 @@ export const marketPriceService = {
       .single();
 
     if (error) handleSupabaseError(error);
-    const row = mapMarketPrice(requireData(data, "Market price insert returned no data") as MarketPrice);
+    const row = mapMarketPrice(
+      requireData(data, "Market price insert returned no data") as MarketPrice,
+    );
 
     await auditService.createAuditLog({
       farmId: payload.farmId,
@@ -184,7 +218,9 @@ export const marketPriceService = {
       .single();
 
     if (error) handleSupabaseError(error);
-    const row = mapMarketPrice(requireData(data, "Market price update returned no data") as MarketPrice);
+    const row = mapMarketPrice(
+      requireData(data, "Market price update returned no data") as MarketPrice,
+    );
 
     await auditService.createAuditLog({
       farmId: payload.farmId,

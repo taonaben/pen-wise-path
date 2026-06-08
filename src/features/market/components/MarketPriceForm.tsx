@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ type Props = {
   defaultSpeciesId?: string;
   onSubmit: (payload: MarketPricePayload) => Promise<void>;
   onCancel: () => void;
+  onAddSource?: () => void;
 };
 
 type FormState = {
@@ -43,6 +45,7 @@ export function MarketPriceForm({
   defaultSpeciesId,
   onSubmit,
   onCancel,
+  onAddSource,
 }: Props) {
   const [form, setForm] = useState<FormState>({
     speciesId: defaultSpeciesId ?? "",
@@ -129,22 +132,31 @@ export function MarketPriceForm({
         ))}
       </select>
 
-      <select
-        className="h-9 w-full rounded-md border border-input bg-farm-900 px-3 text-sm text-foreground"
-        value={form.marketSourceId}
-        onChange={(event) => setField({ marketSourceId: event.target.value })}
-      >
-        <option value="" className="bg-farm-900 text-foreground">
-          Select source
-        </option>
-        {sources
-          .filter((source) => source.is_active || source.id === form.marketSourceId)
-          .map((item) => (
-            <option key={item.id} value={item.id} className="bg-farm-900 text-foreground">
-              {item.name}
-            </option>
-          ))}
-      </select>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+        <select
+          className="h-9 w-full rounded-md border border-input bg-farm-900 px-3 text-sm text-foreground"
+          value={form.marketSourceId}
+          onChange={(event) => setField({ marketSourceId: event.target.value })}
+        >
+          <option value="" className="bg-farm-900 text-foreground">
+            Select source
+          </option>
+          {sources
+            .filter((source) => source.is_active || source.id === form.marketSourceId)
+            .map((item) => (
+              <option key={item.id} value={item.id} className="bg-farm-900 text-foreground">
+                {item.name}
+              </option>
+            ))}
+        </select>
+
+        {onAddSource && (
+          <Button type="button" variant="outline" className="h-9 gap-2" onClick={onAddSource}>
+            <Plus className="h-4 w-4" />
+            Add Source
+          </Button>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Input

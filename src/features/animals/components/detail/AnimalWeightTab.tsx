@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { CalendarDays, Scale, TrendingUp } from "lucide-react";
 import { StatCard } from "@/shared/components/ui/StatCard";
 import { AnimalWeightTrendChart } from "./AnimalWeightTrendChart";
 import { formatKg, formatKgPerDay } from "./animalDetailFormat";
@@ -22,16 +23,54 @@ export function AnimalWeightTab({ records, metrics, isLoading }: Props) {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard title="Starting Weight" value={formatKg(metrics.startingWeightKg)} />
-        <StatCard title="Current Weight" value={formatKg(metrics.currentWeightKg)} />
-        <StatCard title="Average Daily Gain" value={formatKgPerDay(metrics.averageDailyGainKg)} />
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+        <StatCard
+          title="Starting Weight"
+          value={formatKg(metrics.startingWeightKg)}
+          icon={<Scale className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Current Weight"
+          value={formatKg(metrics.currentWeightKg)}
+          icon={<Scale className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Average Daily Gain"
+          value={formatKgPerDay(metrics.averageDailyGainKg)}
+          icon={<TrendingUp className="h-4 w-4" />}
+          density="compact"
+        />
       </div>
 
       <AnimalWeightTrendChart records={records} title="Weight Trend" />
 
       <div className="overflow-x-auto rounded-xl border bg-farm-800/80">
-        <table className="w-full min-w-[640px] text-sm">
+        <div className="space-y-2 p-3 md:hidden">
+          {records.map((record) => (
+            <div
+              key={record.id}
+              className="rounded-lg border border-farm-600/30 bg-farm-900/45 p-3"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold text-foreground">
+                    {formatKg(Number(record.weight_kg))}
+                  </div>
+                  <div className="text-xs text-farm-muted">{record.recorded_at}</div>
+                </div>
+                <CalendarDays className="h-4 w-4 text-farm-lime" />
+              </div>
+              <div className="mt-2 text-xs text-farm-muted">{record.notes ?? "No notes"}</div>
+              <div className="mt-2 text-xs text-farm-muted">
+                Recorded: {record.created_at.slice(0, 10)}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <table className="hidden w-full min-w-160 text-sm md:table">
           <thead className="bg-farm-900/60 text-xs uppercase tracking-wider text-farm-muted">
             <tr>
               {["Date", "Weight", "Notes", "Recorded"].map((heading) => (

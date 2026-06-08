@@ -4,16 +4,26 @@ import { Plus, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
 import { useAnimalSpecies } from "@/features/animals/hooks/useAnimalSpecies";
-import { useMarketPriceActions, useMarketPriceTrend } from "@/features/market/hooks/useMarketPrices";
+import {
+  useMarketPriceActions,
+  useMarketPriceTrend,
+} from "@/features/market/hooks/useMarketPrices";
 import { useMarketSourceActions, useMarketSources } from "@/features/market/hooks/useMarketSources";
 import { MarketPriceFilters } from "@/features/market/components/MarketPriceFilters";
 import { MarketStatsCards } from "@/features/market/components/MarketStatsCards";
@@ -46,6 +56,7 @@ function defaultDateRange() {
 
 function MarketPricesPage() {
   const { currentFarm } = useCurrentFarm();
+  const isMobile = useIsMobile();
   const speciesQuery = useAnimalSpecies();
   const sourcesQuery = useMarketSources(currentFarm.id);
   const sourceActions = useMarketSourceActions(currentFarm.id);
@@ -59,6 +70,7 @@ function MarketPricesPage() {
   const [priceDialogOpen, setPriceDialogOpen] = useState(false);
   const [sourceDialogOpen, setSourceDialogOpen] = useState(false);
   const [editingPrice, setEditingPrice] = useState<MarketPriceViewModel | null>(null);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const species = speciesQuery.data ?? [];
   const sources = sourcesQuery.data ?? [];
@@ -153,12 +165,26 @@ function MarketPricesPage() {
         }
       />
 
-      <MarketPriceFilters
-        filters={filters}
-        species={species}
-        sources={sources}
-        onChange={setFilters}
-      />
+      {isMobile && (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full justify-center gap-2 border-farm-600/50 bg-farm-800/70 text-foreground hover:bg-farm-700/60"
+          onClick={() => setShowMobileFilters((current) => !current)}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          {showMobileFilters ? "Hide Filters" : "Show Filters"}
+        </Button>
+      )}
+
+      {(!isMobile || showMobileFilters) && (
+        <MarketPriceFilters
+          filters={filters}
+          species={species}
+          sources={sources}
+          onChange={setFilters}
+        />
+      )}
 
       {pricesQuery.isLoading && (
         <div className="rounded-xl border bg-farm-800/80 p-5 text-sm text-farm-muted">
@@ -180,21 +206,52 @@ function MarketPricesPage() {
         data={trend.trend}
       />
 
-      <MarketPriceTable
-        rows={rows}
-        onEdit={(row) => {
-          setEditingPrice(row);
-          setPriceDialogOpen(true);
-        }}
-        onDelete={async (row) => {
-          try {
-            await priceActions.deleteMarketPrice.mutateAsync(row.id);
-            toast.success("Market price deleted");
-          } catch {
-            toast.error("Could not delete market price");
-          }
-        }}
-      />
+      {isMobile ? (
+        <Accordion
+          type="multiple"
+          defaultValue={["market-price-records"]}
+          className="rounded-xl border border-farm-600/35 bg-farm-800/55 px-3"
+        >
+          <AccordionItem value="market-price-records" className="border-farm-600/30">
+            <AccordionTrigger className="py-3 text-sm font-semibold hover:no-underline data-[state=open]:text-farm-lime [&[data-state=open]>svg]:text-farm-lime">
+              Market Price Records
+            </AccordionTrigger>
+            <AccordionContent className="pb-3">
+              <MarketPriceTable
+                rows={rows}
+                onEdit={(row) => {
+                  setEditingPrice(row);
+                  setPriceDialogOpen(true);
+                }}
+                onDelete={async (row) => {
+                  try {
+                    await priceActions.deleteMarketPrice.mutateAsync(row.id);
+                    toast.success("Market price deleted");
+                  } catch {
+                    toast.error("Could not delete market price");
+                  }
+                }}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      ) : (
+        <MarketPriceTable
+          rows={rows}
+          onEdit={(row) => {
+            setEditingPrice(row);
+            setPriceDialogOpen(true);
+          }}
+          onDelete={async (row) => {
+            try {
+              await priceActions.deleteMarketPrice.mutateAsync(row.id);
+              toast.success("Market price deleted");
+            } catch {
+              toast.error("Could not delete market price");
+            }
+          }}
+        />
+      )}
 
       <MarketInsightsPanel insights={trend.insights} />
 
@@ -214,6 +271,7 @@ function MarketPricesPage() {
             defaultSpeciesId={filters.speciesId}
             onSubmit={onSavePrice}
             onCancel={closePriceDialog}
+            onAddSource={() => setSourceDialogOpen(true)}
           />
         </DialogContent>
       </Dialog>
