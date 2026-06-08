@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { CircleDot, LayoutGrid, PawPrint, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
+import { StatCard } from "@/shared/components/ui/StatCard";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
 import { useAnimals } from "../hooks/useAnimals";
 import { useAnimalSpecies } from "../hooks/useAnimalSpecies";
@@ -49,6 +51,7 @@ export function AnimalPensPage() {
 
   const [newPenOpen, setNewPenOpen] = useState(false);
   const [newPenForm, setNewPenForm] = useState<NewPenForm>(emptyPenForm);
+  const [selectedPenId, setSelectedPenId] = useState<string>("");
 
   const pens = pensQuery.data?.pens ?? [];
   const assignments = pensQuery.data?.assignments ?? [];
@@ -82,6 +85,39 @@ export function AnimalPensPage() {
     return map;
   }, [speciesQuery.data]);
 
+  const animalsById = useMemo(() => {
+    const map = new Map<string, (typeof presentAnimals)[number]>();
+    for (const animal of presentAnimals) {
+      map.set(animal.id, animal);
+    }
+    return map;
+  }, [presentAnimals]);
+
+  const selectedPen = useMemo(
+    () => pens.find((pen) => pen.id === selectedPenId) ?? null,
+    [pens, selectedPenId],
+  );
+
+  const animalsInSelectedPen = useMemo(() => {
+    if (!selectedPenId) return [];
+
+    return assignments
+      .filter((assignment) => assignment.pen_id === selectedPenId)
+      .map((assignment) => animalsById.get(assignment.animal_id))
+      .filter((animal): animal is NonNullable<typeof animal> => Boolean(animal));
+  }, [assignments, animalsById, selectedPenId]);
+
+  useEffect(() => {
+    if (pens.length === 0) {
+      setSelectedPenId("");
+      return;
+    }
+
+    if (!pens.some((pen) => pen.id === selectedPenId)) {
+      setSelectedPenId(pens[0]!.id);
+    }
+  }, [pens, selectedPenId]);
+
   const onCreatePen = async () => {
     if (!newPenForm.name.trim()) {
       toast.error("Pen name is required");
@@ -108,25 +144,6 @@ export function AnimalPensPage() {
       setNewPenOpen(false);
     } catch {
       toast.error("Could not create pen");
-    }
-  };
-
-  const onAssignAnimal = async (animalId: string, nextPenId: string) => {
-    try {
-      if (!nextPenId) {
-        await actions.clearAnimalAssignment.mutateAsync({ farmId: currentFarm.id, animalId });
-        toast.success("Animal removed from pen");
-        return;
-      }
-
-      await actions.assignAnimal.mutateAsync({
-        farmId: currentFarm.id,
-        animalId,
-        penId: nextPenId,
-      });
-      toast.success("Animal assigned to pen");
-    } catch {
-      toast.error("Could not update pen assignment");
     }
   };
 
@@ -231,24 +248,71 @@ export function AnimalPensPage() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border bg-farm-800/80 p-4">
-          <div className="text-xs text-farm-muted">Total Pens</div>
-          <div className="mt-2 text-xl font-semibold">{pens.length}</div>
-        </div>
-        <div className="rounded-xl border bg-farm-800/80 p-4">
-          <div className="text-xs text-farm-muted">Assigned Animals</div>
-          <div className="mt-2 text-xl font-semibold">{assignments.length}</div>
-        </div>
-        <div className="rounded-xl border bg-farm-800/80 p-4">
-          <div className="text-xs text-farm-muted">Unassigned Animals</div>
-          <div className="mt-2 text-xl font-semibold">
-            {Math.max(presentAnimals.length - assignments.length, 0)}
-          </div>
-        </div>
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+        <StatCard
+          title="Total Pens"
+          value={String(pens.length)}
+          icon={<LayoutGrid className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Assigned Animals"
+          value={String(assignments.length)}
+          icon={<Users className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Unassigned Animals"
+          value={String(Math.max(presentAnimals.length - assignments.length, 0))}
+          icon={<PawPrint className="h-4 w-4" />}
+          density="compact"
+        />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border bg-farm-800/80">
+      <div className="space-y-2 md:hidden">
+        {pens.map((pen) => {
+          const occupancy = occupancyByPen.get(pen.id) ?? 0;
+          const capacityLabel = pen.capacity === null ? "-" : String(pen.capacity);
+          const selected = pen.id === selectedPenId;
+
+          return (
+            <button
+              key={pen.id}
+              type="button"
+              onClick={() => setSelectedPenId(pen.id)}
+              className={`w-full rounded-xl border p-3 text-left transition ${
+                selected
+                  ? "border-farm-lime/60 bg-farm-700/40"
+                  : "border-farm-600/30 bg-farm-800/80 hover:bg-farm-800"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="font-semibold text-foreground">{pen.name}</div>
+                  <div className="mt-1 text-xs text-farm-muted">
+                    {pen.species_id ? (speciesLabelById.get(pen.species_id) ?? "-") : "All species"}
+                  </div>
+                </div>
+                <span className="rounded-full bg-farm-900/50 px-2 py-1 text-xs capitalize text-foreground">
+                  {pen.status}
+                </span>
+              </div>
+              <div className="mt-3 text-xs text-farm-muted">Occupancy</div>
+              <div className="font-medium text-foreground">
+                {`${occupancy}${capacityLabel === "-" ? "" : ` / ${capacityLabel}`}`}
+              </div>
+            </button>
+          );
+        })}
+
+        {!pensQuery.isLoading && pens.length === 0 && (
+          <div className="rounded-xl border bg-farm-800/80 p-4 text-sm text-farm-muted">
+            No pens found for this farm.
+          </div>
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-xl border bg-farm-800/80 md:block">
         <table className="w-full min-w-200 text-sm">
           <thead className="bg-farm-900/60 text-xs uppercase tracking-wider text-farm-muted">
             <tr>
@@ -264,7 +328,20 @@ export function AnimalPensPage() {
               const occupancy = occupancyByPen.get(pen.id) ?? 0;
               const capacity = pen.capacity === null ? "-" : String(pen.capacity);
               return (
-                <tr key={pen.id} className="border-t border-farm-600/30">
+                <tr
+                  key={pen.id}
+                  tabIndex={0}
+                  onClick={() => setSelectedPenId(pen.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSelectedPenId(pen.id);
+                    }
+                  }}
+                  className={`cursor-pointer border-t border-farm-600/30 outline-none transition-colors hover:bg-farm-700/30 focus-visible:bg-farm-700/30 ${
+                    pen.id === selectedPenId ? "bg-farm-700/30" : ""
+                  }`}
+                >
                   <td className="px-5 py-3 font-medium">{pen.name}</td>
                   <td className="px-5 py-3 text-farm-muted">
                     {pen.species_id ? (speciesLabelById.get(pen.species_id) ?? "-") : "All"}
@@ -283,57 +360,76 @@ export function AnimalPensPage() {
         )}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border bg-farm-800/80">
-        <table className="w-full min-w-245 text-sm">
-          <thead className="bg-farm-900/60 text-xs uppercase tracking-wider text-farm-muted">
-            <tr>
-              <th className="px-5 py-3 text-left font-medium">Animal</th>
-              <th className="px-5 py-3 text-left font-medium">Species</th>
-              <th className="px-5 py-3 text-left font-medium">Status</th>
-              <th className="px-5 py-3 text-left font-medium">Current Pen</th>
-              <th className="px-5 py-3 text-left font-medium">Assign</th>
-            </tr>
-          </thead>
-          <tbody>
-            {presentAnimals.map((animal) => {
-              const currentPenId = currentPenByAnimal.get(animal.id) ?? "";
-              return (
-                <tr key={animal.id} className="border-t border-farm-600/30">
-                  <td className="px-5 py-3 font-medium">{animal.tagNumber}</td>
-                  <td className="px-5 py-3 text-farm-muted">{animal.speciesLabel}</td>
-                  <td className="px-5 py-3 text-farm-muted">{animal.statusLabel}</td>
-                  <td className="px-5 py-3 text-farm-muted">
-                    {currentPenId
-                      ? (pens.find((pen) => pen.id === currentPenId)?.name ?? "-")
-                      : "-"}
-                  </td>
-                  <td className="px-5 py-3">
-                    <select
-                      className="h-9 w-full rounded-md border border-input bg-farm-900 px-3 py-1 text-sm text-foreground"
-                      value={currentPenId}
-                      onChange={(event) => onAssignAnimal(animal.id, event.target.value)}
-                    >
-                      <option value="" className="bg-farm-900 text-foreground">
-                        Unassigned
-                      </option>
-                      {pens.map((pen) => (
-                        <option key={pen.id} value={pen.id} className="bg-farm-900 text-foreground">
-                          {pen.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="rounded-xl border bg-farm-800/80 p-3 sm:p-4">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="text-sm font-semibold text-foreground">
+            {selectedPen ? `Animals in ${selectedPen.name}` : "Animals by Pen"}
+          </div>
+          <div className="text-xs text-farm-muted">{animalsInSelectedPen.length} animals</div>
+        </div>
+
+        {!selectedPen && !pensQuery.isLoading && (
+          <div className="rounded-lg border border-farm-600/30 bg-farm-900/35 p-3 text-sm text-farm-muted">
+            Select a pen above to view animals assigned to it.
+          </div>
+        )}
+
+        {selectedPen && (
+          <>
+            <div className="space-y-2 md:hidden">
+              {animalsInSelectedPen.map((animal) => (
+                <div
+                  key={animal.id}
+                  className="rounded-xl border border-farm-600/35 bg-farm-900/45 p-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-semibold text-foreground">{animal.tagNumber}</div>
+                      <div className="mt-1 text-xs text-farm-muted">
+                        {animal.speciesLabel} • {animal.breedLabel}
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-farm-700/50 px-2 py-1 text-xs text-foreground">
+                      {animal.statusLabel}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full min-w-200 text-sm">
+                <thead className="bg-farm-900/60 text-xs uppercase tracking-wider text-farm-muted">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-medium">Animal</th>
+                    <th className="px-4 py-2 text-left font-medium">Species</th>
+                    <th className="px-4 py-2 text-left font-medium">Breed</th>
+                    <th className="px-4 py-2 text-left font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {animalsInSelectedPen.map((animal) => (
+                    <tr key={animal.id} className="border-t border-farm-600/30">
+                      <td className="px-4 py-2 font-medium">{animal.tagNumber}</td>
+                      <td className="px-4 py-2 text-farm-muted">{animal.speciesLabel}</td>
+                      <td className="px-4 py-2 text-farm-muted">{animal.breedLabel}</td>
+                      <td className="px-4 py-2 text-farm-muted">{animal.statusLabel}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {!animalsQuery.isLoading && selectedPen && animalsInSelectedPen.length === 0 && (
+          <div className="mt-2 rounded-lg border border-farm-600/30 bg-farm-900/35 p-3 text-sm text-farm-muted">
+            No active animals are currently assigned to this pen.
+          </div>
+        )}
 
         {animalsQuery.isLoading && (
-          <div className="p-5 text-sm text-farm-muted">Loading animals...</div>
-        )}
-        {!animalsQuery.isLoading && presentAnimals.length === 0 && (
-          <div className="p-5 text-sm text-farm-muted">No active animals found for this farm.</div>
+          <div className="mt-2 text-sm text-farm-muted">Loading animals...</div>
         )}
       </div>
     </div>

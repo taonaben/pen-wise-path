@@ -1,6 +1,13 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { AlertTriangle, CalendarDays, CircleDollarSign, Scale, SlidersHorizontal, Wheat } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarDays,
+  CircleDollarSign,
+  Scale,
+  SlidersHorizontal,
+  Wheat,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -423,93 +430,93 @@ export function FeedTypesPage() {
       )}
 
       {(!isMobile || showMobileFilters) && (
-      <div className="grid grid-cols-1 gap-3 rounded-2xl border bg-farm-800/80 p-4 md:grid-cols-5">
-        <Input
-          className="md:col-span-2"
-          placeholder="Search feed name, category, species..."
-          value={filters.search}
-          onChange={(event) =>
-            setFilters((current) => ({ ...current, search: event.target.value }))
-          }
-        />
-        <select
-          className="h-9 w-full rounded-md border border-input bg-farm-900 px-3 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          value={filters.category}
-          onChange={(event) =>
-            setFilters((current) => ({
-              ...current,
-              category: event.target.value as FeedTypeFilterState["category"],
-            }))
-          }
-        >
-          <option value="all" className="bg-farm-900 text-foreground">
-            All categories
-          </option>
-          {feedCategories.map((category) => (
-            <option key={category} value={category} className="bg-farm-900 text-foreground">
-              {category.replaceAll("_", " ")}
-            </option>
-          ))}
-        </select>
-        <select
-          className="h-9 w-full rounded-md border border-input bg-farm-900 px-3 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          value={filters.speciesId}
-          onChange={(event) =>
-            setFilters((current) => ({ ...current, speciesId: event.target.value }))
-          }
-        >
-          <option value="all" className="bg-farm-900 text-foreground">
-            All species
-          </option>
-          <option value="unassigned" className="bg-farm-900 text-foreground">
-            General feeds
-          </option>
-          {(speciesQuery.data ?? []).map((species) => (
-            <option key={species.id} value={species.id} className="bg-farm-900 text-foreground">
-              {species.name}
-            </option>
-          ))}
-        </select>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-1 gap-3 rounded-2xl border bg-farm-800/80 p-4 md:grid-cols-5">
+          <Input
+            className="md:col-span-2"
+            placeholder="Search feed name, category, species..."
+            value={filters.search}
+            onChange={(event) =>
+              setFilters((current) => ({ ...current, search: event.target.value }))
+            }
+          />
           <select
-            className="h-9 min-w-0 flex-1 rounded-md border border-input bg-farm-900 px-3 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            value={filters.stockStatus}
+            className="h-9 w-full rounded-md border border-input bg-farm-900 px-3 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            value={filters.category}
             onChange={(event) =>
               setFilters((current) => ({
                 ...current,
-                stockStatus: event.target.value as FeedTypeFilterState["stockStatus"],
+                category: event.target.value as FeedTypeFilterState["category"],
               }))
             }
           >
             <option value="all" className="bg-farm-900 text-foreground">
-              All stock
+              All categories
             </option>
-            <option value="in_stock" className="bg-farm-900 text-foreground">
-              In stock
-            </option>
-            <option value="low_stock" className="bg-farm-900 text-foreground">
-              Low stock
-            </option>
-            <option value="out_of_stock" className="bg-farm-900 text-foreground">
-              Out of stock
-            </option>
-            <option value="expiring_soon" className="bg-farm-900 text-foreground">
-              Expiring soon
-            </option>
+            {feedCategories.map((category) => (
+              <option key={category} value={category} className="bg-farm-900 text-foreground">
+                {category.replaceAll("_", " ")}
+              </option>
+            ))}
           </select>
-          {hasActiveFilters && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9"
-              onClick={() => setFilters(emptyFilters)}
+          <select
+            className="h-9 w-full rounded-md border border-input bg-farm-900 px-3 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            value={filters.speciesId}
+            onChange={(event) =>
+              setFilters((current) => ({ ...current, speciesId: event.target.value }))
+            }
+          >
+            <option value="all" className="bg-farm-900 text-foreground">
+              All species
+            </option>
+            <option value="unassigned" className="bg-farm-900 text-foreground">
+              General feeds
+            </option>
+            {(speciesQuery.data ?? []).map((species) => (
+              <option key={species.id} value={species.id} className="bg-farm-900 text-foreground">
+                {species.name}
+              </option>
+            ))}
+          </select>
+          <div className="flex gap-2">
+            <select
+              className="h-9 min-w-0 flex-1 rounded-md border border-input bg-farm-900 px-3 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              value={filters.stockStatus}
+              onChange={(event) =>
+                setFilters((current) => ({
+                  ...current,
+                  stockStatus: event.target.value as FeedTypeFilterState["stockStatus"],
+                }))
+              }
             >
-              Clear
-            </Button>
-          )}
+              <option value="all" className="bg-farm-900 text-foreground">
+                All stock
+              </option>
+              <option value="in_stock" className="bg-farm-900 text-foreground">
+                In stock
+              </option>
+              <option value="low_stock" className="bg-farm-900 text-foreground">
+                Low stock
+              </option>
+              <option value="out_of_stock" className="bg-farm-900 text-foreground">
+                Out of stock
+              </option>
+              <option value="expiring_soon" className="bg-farm-900 text-foreground">
+                Expiring soon
+              </option>
+            </select>
+            {hasActiveFilters && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9"
+                onClick={() => setFilters(emptyFilters)}
+              >
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
       )}
 
       <div className="flex items-center justify-between">

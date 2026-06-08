@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import {
+  AlertTriangle,
+  Beef,
+  CircleCheckBig,
+  PawPrint,
+  PiggyBank,
+  Plus,
+  Wallet,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +27,7 @@ import { useAnimalBreeds } from "../hooks/useAnimalBreeds";
 import { useAnimals } from "../hooks/useAnimals";
 import { useAnimalSpecies } from "../hooks/useAnimalSpecies";
 import { useDeleteAnimal } from "../hooks/useDeleteAnimal";
+import { usePenActions, usePenManagement } from "../hooks/usePenManagement";
 import { useUpdateAnimal } from "../hooks/useUpdateAnimal";
 import type {
   AnimalFilters as AnimalFiltersValue,
@@ -42,7 +51,14 @@ export function AnimalsPage() {
   const animalsQuery = useAnimals(currentFarm.id, filters);
   const updateAnimal = useUpdateAnimal(currentFarm.id);
   const deleteAnimal = useDeleteAnimal(currentFarm.id);
+  const pensQuery = usePenManagement(currentFarm.id);
+  const penActions = usePenActions(currentFarm.id);
   const summary = animalsQuery.data?.summary;
+
+  const currentPenByAnimal = new Map<string, string>();
+  for (const assignment of pensQuery.data?.assignments ?? []) {
+    currentPenByAnimal.set(assignment.animal_id, assignment.pen_id);
+  }
 
   const onChangeStatus = async (animal: AnimalViewModel, status: AnimalStatus) => {
     try {
@@ -70,6 +86,25 @@ export function AnimalsPage() {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not delete animal";
       toast.error(message);
+    }
+  };
+
+  const onAssignAnimalPen = async (animalId: string, nextPenId: string) => {
+    try {
+      if (!nextPenId) {
+        await penActions.clearAnimalAssignment.mutateAsync({ farmId: currentFarm.id, animalId });
+        toast.success("Animal removed from pen");
+        return;
+      }
+
+      await penActions.assignAnimal.mutateAsync({
+        farmId: currentFarm.id,
+        animalId,
+        penId: nextPenId,
+      });
+      toast.success("Animal assigned to pen");
+    } catch {
+      toast.error("Could not update pen assignment");
     }
   };
 
@@ -129,19 +164,37 @@ export function AnimalsPage() {
       </Dialog>
 
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-6">
-        <AnimalSummaryCard title="Total Animals" value={summary?.total ?? 0} />
-        <AnimalSummaryCard title="Cattle" value={summary?.cattle ?? 0} />
-        <AnimalSummaryCard title="Pigs" value={summary?.pigs ?? 0} />
-        <AnimalSummaryCard title="Goats" value={summary?.goats ?? 0} />
+        <AnimalSummaryCard
+          title="Total Animals"
+          value={summary?.total ?? 0}
+          icon={<Wallet className="h-4 w-4" />}
+        />
+        <AnimalSummaryCard
+          title="Cattle"
+          value={summary?.cattle ?? 0}
+          icon={<Beef className="h-4 w-4" />}
+        />
+        <AnimalSummaryCard
+          title="Pigs"
+          value={summary?.pigs ?? 0}
+          icon={<PiggyBank className="h-4 w-4" />}
+        />
+        <AnimalSummaryCard
+          title="Goats"
+          value={summary?.goats ?? 0}
+          icon={<PawPrint className="h-4 w-4" />}
+        />
         <AnimalSummaryCard
           title="Underperforming"
           value={summary?.underperforming ?? 0}
           variant={(summary?.underperforming ?? 0) > 0 ? "warning" : "default"}
+          icon={<AlertTriangle className="h-4 w-4" />}
         />
         <AnimalSummaryCard
           title="Ready for Sale"
           value={summary?.readyForSale ?? 0}
           variant="success"
+          icon={<CircleCheckBig className="h-4 w-4" />}
         />
       </div>
 
@@ -166,10 +219,13 @@ export function AnimalsPage() {
         <AnimalTable
           animals={animalsQuery.data?.animals ?? []}
           isLoading={animalsQuery.isLoading}
+          pens={pensQuery.data?.pens ?? []}
+          currentPenByAnimal={currentPenByAnimal}
           onViewAnimal={(animalId) => navigate({ to: "/animals/$id", params: { id: animalId } })}
           onEditAnimal={setEditingAnimal}
           onChangeStatus={onChangeStatus}
           onDeleteAnimal={onDeleteAnimal}
+          onAssignPen={onAssignAnimalPen}
         />
       )}
     </div>
