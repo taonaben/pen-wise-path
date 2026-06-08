@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Download, FileText, RefreshCcw } from "lucide-react";
+import { Download, FileText, RefreshCcw, SlidersHorizontal } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -16,6 +16,12 @@ import {
   YAxis,
 } from "recharts";
 import { toast } from "sonner";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -30,6 +36,7 @@ import { usePens } from "@/features/animals/hooks/usePens";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
 import { EmptyState } from "@/shared/components/ui/EmptyState";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { formatKg, formatNumber } from "../lib/format";
 import { exportCsv, exportPdf } from "../lib/reportExport";
 import { getDefaultReportFilters, getRangeForPreset } from "../lib/reportFilters";
@@ -49,6 +56,7 @@ function todayStamp() {
 }
 
 export function PerformanceReportPage() {
+  const isMobile = useIsMobile();
   const { currentFarm } = useCurrentFarm();
   const speciesQuery = useAnimalSpecies();
   const pensQuery = usePens(currentFarm.id);
@@ -59,6 +67,7 @@ export function PerformanceReportPage() {
   );
   const [datePreset, setDatePreset] = useState<ReportDatePreset>(initialState.preset);
   const [filters, setFilters] = useState(initialState.filters);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const reportQuery = usePerformanceReport(currentFarm.id, filters);
   const report = reportQuery.data;
@@ -206,16 +215,30 @@ export function PerformanceReportPage() {
         }
       />
 
-      <ReportFilterBar
-        filters={filters}
-        datePreset={datePreset}
-        options={{
-          species: speciesQuery.data ?? [],
-          pens: pensQuery.data ?? [],
-        }}
-        onPresetChange={onPresetChange}
-        onFiltersChange={setFilters}
-      />
+      {isMobile && (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full justify-center gap-2 border-farm-600/50 bg-farm-800/70 text-foreground hover:bg-farm-700/60"
+          onClick={() => setShowMobileFilters((current) => !current)}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          {showMobileFilters ? "Hide Filters" : "Show Filters"}
+        </Button>
+      )}
+
+      {(!isMobile || showMobileFilters) && (
+        <ReportFilterBar
+          filters={filters}
+          datePreset={datePreset}
+          options={{
+            species: speciesQuery.data ?? [],
+            pens: pensQuery.data ?? [],
+          }}
+          onPresetChange={onPresetChange}
+          onFiltersChange={setFilters}
+        />
+      )}
 
       {reportQuery.isLoading ? (
         <div className="rounded-xl border bg-farm-800/80 p-5 text-sm text-farm-muted">
@@ -331,75 +354,227 @@ export function PerformanceReportPage() {
 
           <ReportInsightsPanel insights={report.insights} />
 
-          <ReportDataTable
-            title="Animal Performance Table"
-            description="Growth and health context for each animal in the selected scope."
-          >
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Animal</TableHead>
-                  <TableHead>Species</TableHead>
-                  <TableHead>Pen</TableHead>
-                  <TableHead>Start Weight</TableHead>
-                  <TableHead>Current Weight</TableHead>
-                  <TableHead>Total Gain</TableHead>
-                  <TableHead>ADG</TableHead>
-                  <TableHead>Health</TableHead>
-                  <TableHead>Growth Status</TableHead>
-                  <TableHead>Recommendation</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {report.animalRows.map((row) => (
-                  <TableRow key={row.animalId}>
-                    <TableCell className="font-medium">{row.tagNumber}</TableCell>
-                    <TableCell>{row.speciesName}</TableCell>
-                    <TableCell>{row.penName}</TableCell>
-                    <TableCell>{formatKg(row.startWeightKg)}</TableCell>
-                    <TableCell>{formatKg(row.currentWeightKg)}</TableCell>
-                    <TableCell>{formatKg(row.totalGainKg)}</TableCell>
-                    <TableCell>{formatNumber(row.adgKgPerDay, 3)}</TableCell>
-                    <TableCell>{row.healthStatus}</TableCell>
-                    <TableCell>{row.growthStatus}</TableCell>
-                    <TableCell>{row.recommendation}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ReportDataTable>
+          {isMobile ? (
+            <Accordion
+              type="multiple"
+              defaultValue={["animal-performance", "underperforming"]}
+              className="rounded-2xl border border-farm-600/40 bg-farm-800/70 px-4 py-1"
+            >
+              <AccordionItem value="animal-performance" className="border-farm-600/35">
+                <AccordionTrigger className="py-3 text-sm font-semibold hover:no-underline data-[state=open]:text-farm-lime [&[data-state=open]>svg]:text-farm-lime">
+                  Animal Performance Table
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <div className="text-xs text-farm-muted">
+                    Growth and health context for each animal in the selected scope.
+                  </div>
+                  <div className="mt-3 space-y-3 sm:hidden">
+                    {report.animalRows.map((row) => (
+                      <div
+                        key={row.animalId}
+                        className="rounded-xl border border-farm-500/45 bg-farm-900/65 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                      >
+                        <div className="mb-3 flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-semibold text-foreground">
+                              {row.tagNumber}
+                            </div>
+                            <div className="text-xs text-farm-muted">
+                              {row.speciesName} • {row.penName}
+                            </div>
+                          </div>
+                          <span className="rounded-full bg-farm-700/70 px-2 py-1 text-xs font-medium text-farm-lime">
+                            {row.growthStatus}
+                          </span>
+                        </div>
 
-          <ReportDataTable
-            title="Underperforming Animals"
-            description="Animals below expected ADG or showing critical growth issues."
-          >
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Animal</TableHead>
-                  <TableHead>Species</TableHead>
-                  <TableHead>ADG</TableHead>
-                  <TableHead>Expected ADG</TableHead>
-                  <TableHead>Active Alerts</TableHead>
-                  <TableHead>Health Status</TableHead>
-                  <TableHead>Suggested Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {report.underperformingRows.map((row) => (
-                  <TableRow key={`risk-${row.animalId}`}>
-                    <TableCell className="font-medium">{row.tagNumber}</TableCell>
-                    <TableCell>{row.speciesName}</TableCell>
-                    <TableCell>{formatNumber(row.adgKgPerDay, 3)}</TableCell>
-                    <TableCell>{formatNumber(row.expectedAdgKgPerDay, 3)}</TableCell>
-                    <TableCell>{row.activeAlerts}</TableCell>
-                    <TableCell>{row.healthStatus}</TableCell>
-                    <TableCell>{row.recommendation}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ReportDataTable>
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Start Weight
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {formatKg(row.startWeightKg)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Current Weight
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {formatKg(row.currentWeightKg)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Total Gain
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {formatKg(row.totalGainKg)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              ADG
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {formatNumber(row.adgKgPerDay, 3)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Health
+                            </div>
+                            <div className="font-medium text-foreground">{row.healthStatus}</div>
+                          </div>
+                          <div className="col-span-2">
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Recommendation
+                            </div>
+                            <div className="font-medium text-farm-lime">{row.recommendation}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="underperforming" className="border-farm-600/35">
+                <AccordionTrigger className="py-3 text-sm font-semibold hover:no-underline data-[state=open]:text-farm-lime [&[data-state=open]>svg]:text-farm-lime">
+                  Underperforming Animals
+                </AccordionTrigger>
+                <AccordionContent className="pb-1">
+                  <div className="text-xs text-farm-muted">
+                    Animals below expected ADG or showing critical growth issues.
+                  </div>
+                  <div className="mt-3 space-y-3 sm:hidden">
+                    {report.underperformingRows.map((row) => (
+                      <div
+                        key={`risk-${row.animalId}`}
+                        className="rounded-xl border border-farm-500/45 bg-farm-900/65 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                      >
+                        <div className="mb-3 flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-semibold text-foreground">
+                              {row.tagNumber}
+                            </div>
+                            <div className="text-xs text-farm-muted">{row.speciesName}</div>
+                          </div>
+                          <span className="rounded-full bg-farm-danger/20 px-2 py-1 text-xs font-medium text-farm-danger">
+                            Alerts {row.activeAlerts}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              ADG
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {formatNumber(row.adgKgPerDay, 3)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Expected ADG
+                            </div>
+                            <div className="font-medium text-foreground">
+                              {formatNumber(row.expectedAdgKgPerDay, 3)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Health
+                            </div>
+                            <div className="font-medium text-foreground">{row.healthStatus}</div>
+                          </div>
+                          <div className="col-span-2">
+                            <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                              Suggested Action
+                            </div>
+                            <div className="font-medium text-farm-lime">{row.recommendation}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          ) : (
+            <>
+              <ReportDataTable
+                title="Animal Performance Table"
+                description="Growth and health context for each animal in the selected scope."
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Animal</TableHead>
+                      <TableHead>Species</TableHead>
+                      <TableHead>Pen</TableHead>
+                      <TableHead>Start Weight</TableHead>
+                      <TableHead>Current Weight</TableHead>
+                      <TableHead>Total Gain</TableHead>
+                      <TableHead>ADG</TableHead>
+                      <TableHead>Health</TableHead>
+                      <TableHead>Growth Status</TableHead>
+                      <TableHead>Recommendation</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {report.animalRows.map((row) => (
+                      <TableRow key={row.animalId}>
+                        <TableCell className="font-medium">{row.tagNumber}</TableCell>
+                        <TableCell>{row.speciesName}</TableCell>
+                        <TableCell>{row.penName}</TableCell>
+                        <TableCell>{formatKg(row.startWeightKg)}</TableCell>
+                        <TableCell>{formatKg(row.currentWeightKg)}</TableCell>
+                        <TableCell>{formatKg(row.totalGainKg)}</TableCell>
+                        <TableCell>{formatNumber(row.adgKgPerDay, 3)}</TableCell>
+                        <TableCell>{row.healthStatus}</TableCell>
+                        <TableCell>{row.growthStatus}</TableCell>
+                        <TableCell>{row.recommendation}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ReportDataTable>
+
+              <ReportDataTable
+                title="Underperforming Animals"
+                description="Animals below expected ADG or showing critical growth issues."
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Animal</TableHead>
+                      <TableHead>Species</TableHead>
+                      <TableHead>ADG</TableHead>
+                      <TableHead>Expected ADG</TableHead>
+                      <TableHead>Active Alerts</TableHead>
+                      <TableHead>Health Status</TableHead>
+                      <TableHead>Suggested Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {report.underperformingRows.map((row) => (
+                      <TableRow key={`risk-${row.animalId}`}>
+                        <TableCell className="font-medium">{row.tagNumber}</TableCell>
+                        <TableCell>{row.speciesName}</TableCell>
+                        <TableCell>{formatNumber(row.adgKgPerDay, 3)}</TableCell>
+                        <TableCell>{formatNumber(row.expectedAdgKgPerDay, 3)}</TableCell>
+                        <TableCell>{row.activeAlerts}</TableCell>
+                        <TableCell>{row.healthStatus}</TableCell>
+                        <TableCell>{row.recommendation}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ReportDataTable>
+            </>
+          )}
         </>
       ) : null}
     </div>
