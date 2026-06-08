@@ -79,8 +79,15 @@ export async function getFeedCostToSale(args: {
 
   if (error) throw new HttpError("SALE_FAILED", error.message, 500);
 
-  return ((data ?? []) as Array<{ allocated_cost: number | string; feeding_event?: { feeding_date?: string } | null }>)
-    .filter((row) => !row.feeding_event?.feeding_date || row.feeding_event.feeding_date <= args.soldAt)
+  return (
+    (data ?? []) as Array<{
+      allocated_cost: number | string;
+      feeding_event?: { feeding_date?: string } | null;
+    }>
+  )
+    .filter(
+      (row) => !row.feeding_event?.feeding_date || row.feeding_event.feeding_date <= args.soldAt,
+    )
     .reduce((sum, row) => sum + toNumber(row.allocated_cost), 0);
 }
 
@@ -158,7 +165,8 @@ export async function createVerifiedMarketPrice(args: {
   animal: AnimalRow;
   userId: string;
 }): Promise<string | null> {
-  if (!args.payload.createMarketPrice || !args.animal.species_id || !args.payload.soldAt) return null;
+  if (!args.payload.createMarketPrice || !args.animal.species_id || !args.payload.soldAt)
+    return null;
 
   const sourceName = args.payload.buyerName
     ? `Buyer - ${args.payload.buyerName}`

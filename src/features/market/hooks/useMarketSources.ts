@@ -32,7 +32,8 @@ export function useMarketSourceActions(farmId: string | undefined) {
       onSuccess: invalidate,
     }),
     deactivateMarketSource: useMutation({
-      mutationFn: (sourceId: string) => marketSourceService.deactivateMarketSource(farmId!, sourceId),
+      mutationFn: (sourceId: string) =>
+        marketSourceService.deactivateMarketSource(farmId!, sourceId),
       onSuccess: invalidate,
     }),
   };

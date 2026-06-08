@@ -1,11 +1,6 @@
 import type { AnimalStatus } from "@/features/animals/types/animal.types";
 
-export type FeedCostStatus =
-  | "Excellent"
-  | "Normal"
-  | "Poor"
-  | "Critical"
-  | "Insufficient Data";
+export type FeedCostStatus = "Excellent" | "Normal" | "Poor" | "Critical" | "Insufficient Data";
 
 export type FeedCostAnalysisFilters = {
   startDate: string;

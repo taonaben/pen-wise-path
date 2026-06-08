@@ -33,9 +33,7 @@ function calculateSummary(rows: SalesRecordViewModel[]): SalesSummary {
     animalsSold: sales.length,
     averagePricePerKg: totalWeight > 0 ? round(totalRevenue / totalWeight) : null,
     averageProfitPerAnimal: sales.length > 0 ? round(totalProfit / sales.length) : null,
-    bestSale: sales.length
-      ? [...sales].sort((a, b) => b.netProfit - a.netProfit)[0]
-      : null,
+    bestSale: sales.length ? [...sales].sort((a, b) => b.netProfit - a.netProfit)[0] : null,
     lossMakingSales: sales.filter((row) => row.netProfit < 0).length,
   };
 }

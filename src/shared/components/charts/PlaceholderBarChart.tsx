@@ -18,7 +18,13 @@ export function PlaceholderBarChart({ title = "ADG by Breed (kg/day)" }: { title
             <CartesianGrid stroke="#16483a" strokeDasharray="3 3" />
             <XAxis dataKey="k" stroke="#9cb8aa" fontSize={11} />
             <YAxis stroke="#9cb8aa" fontSize={11} />
-            <Tooltip contentStyle={{ background: "#062f25", border: "1px solid #16483a", borderRadius: 12 }} />
+            <Tooltip
+              contentStyle={{
+                background: "#062f25",
+                border: "1px solid #16483a",
+                borderRadius: 12,
+              }}
+            />
             <Bar dataKey="v" fill="#b7f34a" radius={[8, 8, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>

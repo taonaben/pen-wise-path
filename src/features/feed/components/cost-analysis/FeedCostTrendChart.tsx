@@ -1,4 +1,12 @@
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import type { FeedCostTrendPoint } from "../../types/feedCostAnalysis.types";
 import { formatMoney } from "./format";
 
@@ -21,7 +29,11 @@ export function FeedCostTrendChart({ data }: Props) {
             <YAxis stroke="#9cb8aa" fontSize={11} tickFormatter={(value) => `$${value}`} />
             <Tooltip
               formatter={(value) => formatMoney(Number(value))}
-              contentStyle={{ background: "#062f25", border: "1px solid #16483a", borderRadius: 12 }}
+              contentStyle={{
+                background: "#062f25",
+                border: "1px solid #16483a",
+                borderRadius: 12,
+              }}
             />
             <Line
               type="monotone"

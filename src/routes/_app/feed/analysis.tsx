@@ -151,7 +151,7 @@ function FeedCostAnalysisPage() {
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
                   <FeedEfficiencyTable rows={analysis.feedEfficiencyRows} />
-                </AccordionContent> 
+                </AccordionContent>
               </AccordionItem>
 
               <AccordionItem value="animal-feed-cost" className="border-farm-600/30">

@@ -15,7 +15,14 @@ type Props = {
   onFiltersChange: (filters: FeedCostAnalysisFilters) => void;
 };
 
-const animalStatuses: Array<AnimalStatus | "all"> = ["all", "active", "sold", "sick", "removed", "dead"];
+const animalStatuses: Array<AnimalStatus | "all"> = [
+  "all",
+  "active",
+  "sold",
+  "sick",
+  "removed",
+  "dead",
+];
 
 export function FeedCostFilters({
   filters,

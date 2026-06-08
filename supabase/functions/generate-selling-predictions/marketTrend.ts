@@ -19,7 +19,8 @@ export function selectPredictedMarketPrice(
 
   const limit = method === "average_last_5" ? 5 : method === "average_last_3" ? 3 : 1;
   const selected = prices.slice(0, limit);
-  const average = selected.reduce((sum, row) => sum + toNumber(row.price_per_kg), 0) / selected.length;
+  const average =
+    selected.reduce((sum, row) => sum + toNumber(row.price_per_kg), 0) / selected.length;
 
   return {
     price: average,

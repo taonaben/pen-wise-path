@@ -1,4 +1,12 @@
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Tooltip,
+  CartesianGrid,
+} from "recharts";
 
 const data = Array.from({ length: 12 }).map((_, i) => ({
   d: `W${i + 1}`,
@@ -18,7 +26,13 @@ export function PlaceholderLineChart({ title = "Weight Gain Trend" }: { title?: 
             <CartesianGrid stroke="#16483a" strokeDasharray="3 3" />
             <XAxis dataKey="d" stroke="#9cb8aa" fontSize={11} />
             <YAxis stroke="#9cb8aa" fontSize={11} />
-            <Tooltip contentStyle={{ background: "#062f25", border: "1px solid #16483a", borderRadius: 12 }} />
+            <Tooltip
+              contentStyle={{
+                background: "#062f25",
+                border: "1px solid #16483a",
+                borderRadius: 12,
+              }}
+            />
             <Line type="monotone" dataKey="v" stroke="#b7f34a" strokeWidth={2.5} dot={false} />
           </LineChart>
         </ResponsiveContainer>

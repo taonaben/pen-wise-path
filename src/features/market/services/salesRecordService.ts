@@ -68,7 +68,11 @@ export function mapSalesRecord(row: SalesRecordRow): SalesRecordViewModel {
   };
 }
 
-function toFunctionPayload(action: "create" | "update", payload: SalesRecordPayload, saleId?: string) {
+function toFunctionPayload(
+  action: "create" | "update",
+  payload: SalesRecordPayload,
+  saleId?: string,
+) {
   return {
     action,
     farm_id: payload.farmId,
@@ -95,14 +99,20 @@ function toFunctionPayload(action: "create" | "update", payload: SalesRecordPayl
 async function invokeSaleFunction(body: Record<string, unknown>): Promise<SalesRecordViewModel> {
   const { data, error } = await supabase.functions.invoke("record-animal-sale", { body });
   if (error) handleSupabaseError(error);
-  const sale = requireData((data as { sale?: SalesRecordRow } | null)?.sale, "Sale response returned no data");
+  const sale = requireData(
+    (data as { sale?: SalesRecordRow } | null)?.sale,
+    "Sale response returned no data",
+  );
   return mapSalesRecord(sale as SalesRecordRow);
 }
 
 export const salesRecordService = {
   mapSalesRecord,
 
-  async getSalesRecords(farmId: string, filters: SalesFilters = {}): Promise<SalesRecordViewModel[]> {
+  async getSalesRecords(
+    farmId: string,
+    filters: SalesFilters = {},
+  ): Promise<SalesRecordViewModel[]> {
     let query = db
       .from("sales_records")
       .select(
@@ -121,7 +131,8 @@ export const salesRecordService = {
     if (filters.dateFrom) query = query.gte("sold_at", filters.dateFrom);
     if (filters.dateTo) query = query.lte("sold_at", filters.dateTo);
     if (filters.speciesId) query = query.eq("species_id", filters.speciesId);
-    if (filters.saleStatus && filters.saleStatus !== "all") query = query.eq("sale_status", filters.saleStatus);
+    if (filters.saleStatus && filters.saleStatus !== "all")
+      query = query.eq("sale_status", filters.saleStatus);
     if (filters.paymentStatus && filters.paymentStatus !== "all") {
       query = query.eq("payment_status", filters.paymentStatus);
     }
@@ -173,7 +184,10 @@ export const salesRecordService = {
     const latestMarket = animal.species?.id
       ? await marketPriceService.getLatestMarketPrice(farmId, animal.species.id)
       : null;
-    const latestPrediction = await sellingPredictionApi.getSellingPredictionByAnimal(farmId, animalId);
+    const latestPrediction = await sellingPredictionApi.getSellingPredictionByAnimal(
+      farmId,
+      animalId,
+    );
 
     return {
       animal,
@@ -188,11 +202,18 @@ export const salesRecordService = {
     return invokeSaleFunction(toFunctionPayload("create", payload));
   },
 
-  async updateSaleRecord(saleId: string, payload: SalesRecordPayload): Promise<SalesRecordViewModel> {
+  async updateSaleRecord(
+    saleId: string,
+    payload: SalesRecordPayload,
+  ): Promise<SalesRecordViewModel> {
     return invokeSaleFunction(toFunctionPayload("update", payload, saleId));
   },
 
-  async voidSaleRecord(farmId: string, saleId: string, reason?: string | null): Promise<SalesRecordViewModel> {
+  async voidSaleRecord(
+    farmId: string,
+    saleId: string,
+    reason?: string | null,
+  ): Promise<SalesRecordViewModel> {
     return invokeSaleFunction({
       action: "void",
       farm_id: farmId,

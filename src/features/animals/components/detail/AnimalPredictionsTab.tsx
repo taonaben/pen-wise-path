@@ -24,12 +24,18 @@ export function AnimalPredictionsTab({ animal }: Props) {
                 ? `+${projection.projectedGainKg.toFixed(2)} kg expected`
                 : "Needs ADG data"
             }
-            icon={projection.projectedGainKg !== null ? <TrendingUp className="h-4 w-4" /> : <CalendarDays className="h-4 w-4" />}
+            icon={
+              projection.projectedGainKg !== null ? (
+                <TrendingUp className="h-4 w-4" />
+              ) : (
+                <CalendarDays className="h-4 w-4" />
+              )
+            }
             density="compact"
           />
         ))}
       </div>
-      
+
       <div className="rounded-xl border bg-farm-800/80 p-5">
         <h2 className="text-base font-semibold">Recommended Selling Window</h2>
         <p className="mt-2 text-sm text-farm-muted">{animal.recommendation}</p>

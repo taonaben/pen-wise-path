@@ -1,4 +1,12 @@
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import type { MarketTrendPoint } from "../types/market.types";
 import { formatMoney } from "./marketUiFormat";
 
@@ -20,10 +28,18 @@ export function MarketPriceChart({ title, currency, data }: Props) {
           <LineChart data={data} margin={{ top: 10, right: 18, bottom: 0, left: -10 }}>
             <CartesianGrid stroke="#16483a" strokeDasharray="3 3" />
             <XAxis dataKey="week" stroke="#9cb8aa" fontSize={11} tickMargin={8} />
-            <YAxis stroke="#9cb8aa" fontSize={11} tickFormatter={(value) => `${currency} ${value}`} />
+            <YAxis
+              stroke="#9cb8aa"
+              fontSize={11}
+              tickFormatter={(value) => `${currency} ${value}`}
+            />
             <Tooltip
               formatter={(value) => formatMoney(Number(value), currency, "/kg")}
-              contentStyle={{ background: "#062f25", border: "1px solid #16483a", borderRadius: 12 }}
+              contentStyle={{
+                background: "#062f25",
+                border: "1px solid #16483a",
+                borderRadius: 12,
+              }}
             />
             <Line
               type="monotone"

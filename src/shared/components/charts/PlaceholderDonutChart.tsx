@@ -14,12 +14,25 @@ export function PlaceholderDonutChart({ title = "Animal Performance" }: { title?
       <div className="h-64">
         <ResponsiveContainer>
           <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={3}>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              innerRadius={55}
+              outerRadius={85}
+              paddingAngle={3}
+            >
               {data.map((d) => (
                 <Cell key={d.name} fill={d.color} stroke="transparent" />
               ))}
             </Pie>
-            <Tooltip contentStyle={{ background: "#062f25", border: "1px solid #16483a", borderRadius: 12 }} />
+            <Tooltip
+              contentStyle={{
+                background: "#062f25",
+                border: "1px solid #16483a",
+                borderRadius: 12,
+              }}
+            />
           </PieChart>
         </ResponsiveContainer>
       </div>

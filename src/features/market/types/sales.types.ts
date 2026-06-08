@@ -47,7 +47,12 @@ export type SalesRecordRow = {
   created_at: string;
   updated_at: string;
   metadata: Record<string, unknown> | null;
-  animal?: { id: string; tag_number: string; status: string | null; purchase_price?: number | string | null } | null;
+  animal?: {
+    id: string;
+    tag_number: string;
+    status: string | null;
+    purchase_price?: number | string | null;
+  } | null;
   species?: { id: string; name: string; slug: string } | null;
   market_price?: { id: string; price_per_kg: number | string; recorded_at: string } | null;
   prediction?: {

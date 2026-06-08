@@ -23,7 +23,11 @@ function BreakdownChart({ title, description, data }: ChartProps) {
             <YAxis stroke="#9cb8aa" fontSize={11} tickFormatter={(value) => `$${value}`} />
             <Tooltip
               formatter={(value) => formatMoney(Number(value))}
-              contentStyle={{ background: "#062f25", border: "1px solid #16483a", borderRadius: 12 }}
+              contentStyle={{
+                background: "#062f25",
+                border: "1px solid #16483a",
+                borderRadius: 12,
+              }}
             />
             <Bar dataKey="feedCost" name="Feed cost" fill="#b7f34a" radius={[6, 6, 0, 0]} />
           </BarChart>

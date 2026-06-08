@@ -20,10 +20,7 @@ export function getDefaultFeedCostAnalysisFilters(): FeedCostAnalysisFilters {
   };
 }
 
-export function useFeedCostAnalysis(
-  farmId: string | undefined,
-  filters: FeedCostAnalysisFilters,
-) {
+export function useFeedCostAnalysis(farmId: string | undefined, filters: FeedCostAnalysisFilters) {
   return useQuery({
     queryKey: feedCostAnalysisKeys.detail(farmId, filters),
     queryFn: () => feedCostAnalysisService.getCostAnalysis(farmId!, filters),

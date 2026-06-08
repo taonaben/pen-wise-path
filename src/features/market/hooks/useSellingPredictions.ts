@@ -3,7 +3,8 @@ import { sellingPredictionApi } from "../services/sellingPredictionApi";
 
 export const sellingPredictionKeys = {
   all: ["selling-predictions"] as const,
-  list: (farmId: string | undefined) => [...sellingPredictionKeys.all, farmId ?? "no-farm"] as const,
+  list: (farmId: string | undefined) =>
+    [...sellingPredictionKeys.all, farmId ?? "no-farm"] as const,
   animal: (farmId: string | undefined, animalId: string | undefined) =>
     [...sellingPredictionKeys.all, farmId ?? "no-farm", "animal", animalId ?? "no-animal"] as const,
 };

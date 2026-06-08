@@ -251,7 +251,10 @@ function buildAnimalRows(
 
 function buildFeedRows(allocations: AllocationContext[], animalRows: AnimalFeedCostRow[]) {
   const animalGainById = new Map(
-    animalRows.map((row) => [row.animalId, row.weightGainedKg !== null && row.weightGainedKg > 0 ? row.weightGainedKg : null]),
+    animalRows.map((row) => [
+      row.animalId,
+      row.weightGainedKg !== null && row.weightGainedKg > 0 ? row.weightGainedKg : null,
+    ]),
   );
   const grouped = new Map<
     string,
@@ -297,7 +300,11 @@ function buildFeedRows(allocations: AllocationContext[], animalRows: AnimalFeedC
         averageCostPerKgFeed: round(ratio(row.totalCost, row.totalUsedKg)),
         estimatedKgGained: round(usableGain),
         costPerKgGained: round(ratio(row.totalCost, usableGain)),
-        status: usableGain ? (fcr !== null && fcr <= 5 ? "Excellent" : "Normal") : "Insufficient Data",
+        status: usableGain
+          ? fcr !== null && fcr <= 5
+            ? "Excellent"
+            : "Normal"
+          : "Insufficient Data",
       };
     })
     .sort((a, b) => b.totalCost - a.totalCost);
@@ -435,7 +442,8 @@ function buildInsights(args: {
       id: "no-data",
       severity: "info",
       title: "No cost issues found",
-      message: "Record feed allocations and weight records to generate cost insights for this period.",
+      message:
+        "Record feed allocations and weight records to generate cost insights for this period.",
     });
   }
 
@@ -476,8 +484,16 @@ export const feedCostAnalysisService = {
       { data: weightData, error: weightError },
     ] = await Promise.all([
       eventQuery,
-      db.from("animal_pen_assignments").select("*, pen:pens(*)").eq("farm_id", farmId).is("ended_at", null),
-      db.from("weight_records").select("*").eq("farm_id", farmId).lte("recorded_at", filters.endDate),
+      db
+        .from("animal_pen_assignments")
+        .select("*, pen:pens(*)")
+        .eq("farm_id", farmId)
+        .is("ended_at", null),
+      db
+        .from("weight_records")
+        .select("*")
+        .eq("farm_id", farmId)
+        .lte("recorded_at", filters.endDate),
     ]);
 
     if (eventError) handleSupabaseError(eventError);
@@ -582,7 +598,9 @@ export const feedCostAnalysisService = {
       0,
     );
     const totalUsableGain = animalRows.reduce(
-      (total, animal) => total + (animal.weightGainedKg !== null && animal.weightGainedKg > 0 ? animal.weightGainedKg : 0),
+      (total, animal) =>
+        total +
+        (animal.weightGainedKg !== null && animal.weightGainedKg > 0 ? animal.weightGainedKg : 0),
       0,
     );
     const mostExpensiveFeed = feedRows[0]?.feedTypeName ?? null;

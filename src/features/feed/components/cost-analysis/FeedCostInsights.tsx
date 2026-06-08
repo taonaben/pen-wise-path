@@ -25,8 +25,13 @@ export function FeedCostInsights({ insights }: Props) {
       <div className="text-sm font-medium text-foreground">Cost Insights</div>
       <div className="mt-4 grid gap-3 lg:grid-cols-2">
         {insights.map((insight) => (
-          <div key={insight.id} className="flex gap-3 rounded-lg border border-farm-600/30 bg-farm-900/40 p-3">
-            <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${severityClass(insight.severity)}`}>
+          <div
+            key={insight.id}
+            className="flex gap-3 rounded-lg border border-farm-600/30 bg-farm-900/40 p-3"
+          >
+            <div
+              className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${severityClass(insight.severity)}`}
+            >
               {iconForSeverity(insight.severity)}
             </div>
             <div>
