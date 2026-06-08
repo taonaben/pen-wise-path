@@ -1,33 +1,26 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { authService } from "@/features/auth/services/authService";
+import { useOnboardingGuard } from "@/hooks/useOnboardingGuard";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
-  const [checked, setChecked] = useState(false);
+  const { loading, error } = useOnboardingGuard();
 
-  useEffect(() => {
-    let mounted = true;
-    authService.getSession().then((session) => {
-      if (!mounted) return;
-      if (!session) navigate({ to: "/login" });
-      else setChecked(true);
-    });
-    const { data } = authService.onAuthStateChange((_e, session) => {
-      if (!session) navigate({ to: "/login" });
-    });
-    return () => {
-      mounted = false;
-      data.subscription.unsubscribe();
-    };
-  }, [navigate]);
-
-  if (!checked) {
+  if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-farm-950 text-farm-muted text-sm">
-        Loading…
+      <div className="flex min-h-screen items-center justify-center bg-farm-950 text-sm text-farm-muted">
+        Checking your access…
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-farm-950 p-6 text-sm text-farm-muted">
+        <div className="max-w-md space-y-3 rounded-2xl border border-border bg-farm-900/80 p-6 text-center shadow-lg">
+          <p className="text-foreground">Unable to verify onboarding status.</p>
+          <p>{error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 }

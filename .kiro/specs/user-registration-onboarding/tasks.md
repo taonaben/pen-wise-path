@@ -71,8 +71,8 @@ This implementation plan guides the creation of a complete user registration and
     - Include link to login page for existing users
     - _Requirements: 1.1, 1.3, 1.4, 1.5, 6.2, 8.1, 8.2_
 
-- [ ] 7. Create email verification route and components
-  - [~] 7.1 Create email verification page route
+- [x] 7. Create email verification route and components
+  - [x] 7.1 Create email verification page route
     - Create `src/routes/verify-email.tsx` with TanStack Router route definition
     - Implement 6-digit OTP input state using `input-otp` library
     - Implement attempt counter (max 5 attempts) with 15-minute lockout
@@ -80,7 +80,7 @@ This implementation plan guides the creation of a complete user registration and
     - Handle successful verification by navigating to `/profile-setup`
     - Handle verification errors by incrementing attempt counter and displaying error
     - _Requirements: 2.1, 2.4, 2.5, 2.6, 2.7, 6.3, 8.1, 8.2, 8.5_
-  - [~] 7.2 Create OTP verification form component
+  - [x] 7.2 Create OTP verification form component
     - Create `src/components/auth/VerifyEmailForm.tsx` using shadcn/ui components
     - Include 6-digit OTP input component from `input-otp`
     - Include "Resend OTP" button with 60-second cooldown timer
@@ -88,8 +88,8 @@ This implementation plan guides the creation of a complete user registration and
     - Show clear error messages for invalid/expired OTP
     - _Requirements: 2.1, 2.4, 2.5, 2.6, 2.7, 2.8, 8.1, 8.2, 8.4_
 
-- [ ] 8. Create profile setup route and components
-  - [~] 8.1 Create profile setup page route
+- [x] 8. Create profile setup route and components
+  - [x] 8.1 Create profile setup page route
     - Create `src/routes/profile-setup.tsx` with TanStack Router route definition
     - Implement form state management with firstName and lastName fields
     - Implement form validation using profileSchema before submission
@@ -97,7 +97,7 @@ This implementation plan guides the creation of a complete user registration and
     - Display validation errors and submission errors to user
     - Include progress indicator showing "Step 1 of 2"
     - _Requirements: 3.1, 3.2, 3.7, 3.8, 3.9, 6.4, 8.1, 8.2, 8.5, 8.6_
-  - [~] 8.2 Create profile setup form component
+  - [x] 8.2 Create profile setup form component
     - Create `src/components/auth/ProfileSetupForm.tsx` using shadcn/ui components
     - Include first name input and last name input
     - Display error messages for each field
@@ -154,7 +154,7 @@ This implementation plan guides the creation of a complete user registration and
     - _Requirements: 8.3, 8.4_
 
 - [ ] 13. Add login route integration
-  - [~] 13.1 Create or update login route with registration link
+  - [x] 13.1 Create or update login route with registration link
     - Create/update `src/routes/login.tsx` to display login form
     - Add "Create an account" link that navigates to `/register`
     - Ensure login route is the default for unauthenticated users

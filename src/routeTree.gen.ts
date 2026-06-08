@@ -9,9 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as RegisterRouteImport } from './routes/register'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ProfileSetupRouteImport } from './routes/profile-setup'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as FarmSetupRouteImport } from './routes/farm-setup'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -36,9 +38,9 @@ import { Route as AppAnimalsAlertsRouteImport } from './routes/_app/animals/aler
 import { Route as AppAnimalsIdRouteImport } from './routes/_app/animals/$id'
 import { Route as AppFeedTypesIdRouteImport } from './routes/_app/feed/types.$id'
 
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -46,9 +48,19 @@ const RegisterRoute = RegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VerifyEmailRoute = VerifyEmailRouteImport.update({
-  id: '/verify-email',
-  path: '/verify-email',
+const ProfileSetupRoute = ProfileSetupRouteImport.update({
+  id: '/profile-setup',
+  path: '/profile-setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FarmSetupRoute = FarmSetupRouteImport.update({
+  id: '/farm-setup',
+  path: '/farm-setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AcceptInviteRoute = AcceptInviteRouteImport.update({
@@ -169,7 +181,9 @@ const AppFeedTypesIdRoute = AppFeedTypesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/farm-setup': typeof FarmSetupRoute
   '/login': typeof LoginRoute
+  '/profile-setup': typeof ProfileSetupRoute
   '/register': typeof RegisterRoute
   '/verify-email': typeof VerifyEmailRoute
   '/dashboard': typeof AppDashboardRoute
@@ -196,7 +210,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/farm-setup': typeof FarmSetupRoute
   '/login': typeof LoginRoute
+  '/profile-setup': typeof ProfileSetupRoute
   '/register': typeof RegisterRoute
   '/verify-email': typeof VerifyEmailRoute
   '/dashboard': typeof AppDashboardRoute
@@ -225,7 +241,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
+  '/farm-setup': typeof FarmSetupRoute
   '/login': typeof LoginRoute
+  '/profile-setup': typeof ProfileSetupRoute
   '/register': typeof RegisterRoute
   '/verify-email': typeof VerifyEmailRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -254,7 +272,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accept-invite'
+    | '/farm-setup'
     | '/login'
+    | '/profile-setup'
     | '/register'
     | '/verify-email'
     | '/dashboard'
@@ -281,7 +301,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/accept-invite'
+    | '/farm-setup'
     | '/login'
+    | '/profile-setup'
     | '/register'
     | '/verify-email'
     | '/dashboard'
@@ -309,7 +331,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/accept-invite'
+    | '/farm-setup'
     | '/login'
+    | '/profile-setup'
     | '/register'
     | '/verify-email'
     | '/_app/dashboard'
@@ -338,18 +362,20 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
+  FarmSetupRoute: typeof FarmSetupRoute
   LoginRoute: typeof LoginRoute
+  ProfileSetupRoute: typeof ProfileSetupRoute
   RegisterRoute: typeof RegisterRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -359,11 +385,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/verify-email': {
-      id: '/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof VerifyEmailRouteImport
+    '/profile-setup': {
+      id: '/profile-setup'
+      path: '/profile-setup'
+      fullPath: '/profile-setup'
+      preLoaderRoute: typeof ProfileSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/farm-setup': {
+      id: '/farm-setup'
+      path: '/farm-setup'
+      fullPath: '/farm-setup'
+      preLoaderRoute: typeof FarmSetupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/accept-invite': {
@@ -592,7 +632,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
+  FarmSetupRoute: FarmSetupRoute,
   LoginRoute: LoginRoute,
+  ProfileSetupRoute: ProfileSetupRoute,
   RegisterRoute: RegisterRoute,
   VerifyEmailRoute: VerifyEmailRoute,
 }

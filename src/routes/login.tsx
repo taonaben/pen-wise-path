@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Leaf } from "lucide-react";
 import { authService } from "@/features/auth/services/authService";
@@ -86,7 +86,9 @@ function LoginPage() {
             <a href="#" className="text-farm-muted hover:text-farm-lime">
               Forgot password?
             </a>
-            <span className="text-farm-muted">Members are added by the farm manager.</span>
+            <Link to="/register" className="text-farm-muted hover:text-farm-lime">
+              Create an account
+            </Link>
           </div>
         </form>
       </div>

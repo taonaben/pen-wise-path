@@ -39,8 +39,7 @@ export const farmService = {
     const locationValue = trimmedLocation && trimmedLocation.length > 0 ? trimmedLocation : null;
 
     // Step 1: Create farm record
-    const { data: farm, error: farmError } = await supabase
-      .from("farms")
+    const { data: farm, error: farmError } = await (supabase.from("farms") as any)
       .insert({
         name: trimmedName,
         location: locationValue,
@@ -50,11 +49,11 @@ export const farmService = {
       .single();
 
     if (farmError) handleSupabaseError(farmError);
-    requireData(farm, "Failed to create farm");
+    const createdFarm = requireData(farm as Farm | null, "Failed to create farm");
 
     // Step 2: Create farm_members record for ownership assignment
-    const { error: memberError } = await supabase.from("farm_members").insert({
-      farm_id: farm.id,
+    const { error: memberError } = await (supabase.from("farm_members") as any).insert({
+      farm_id: createdFarm.id,
       user_id: userId,
       role: "owner",
       status: "active",
@@ -68,7 +67,7 @@ export const farmService = {
       handleSupabaseError(memberError);
     }
 
-    return farm;
+    return createdFarm;
   },
 
   /**

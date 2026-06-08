@@ -36,9 +36,15 @@ export const authService = {
    * @returns AuthResponse with user object (email_confirmed_at: null until verified)
    */
   async registerWithPassword(email: string, password: string) {
+    const emailRedirectTo =
+      typeof window !== "undefined" ? `${window.location.origin}/verify-email` : undefined;
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo,
+      },
     });
     if (error) handleSupabaseError(error);
     return data;
