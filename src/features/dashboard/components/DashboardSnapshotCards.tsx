@@ -9,17 +9,24 @@ type Props = {
   activeAnimalsSummary: AnimalSummary | undefined;
   feedCost: FeedCostAnalysisResult | undefined;
   predictions: SellingPredictionViewModel[];
+  onNavigate: (route: string) => void;
 };
 
-export function DashboardSnapshotCards({ activeAnimalsSummary, feedCost, predictions }: Props) {
+export function DashboardSnapshotCards({
+  activeAnimalsSummary,
+  feedCost,
+  predictions,
+  onNavigate,
+}: Props) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3">
       <StatCard
         title="Total Animals"
         value={String(activeAnimalsSummary?.total ?? 0)}
         description="Active in feedlot"
         icon={<Beef className="h-4 w-4" />}
         density="compact"
+        onClick={() => onNavigate("/animals")}
       />
       <StatCard
         title="Average Daily Gain"
@@ -28,6 +35,7 @@ export function DashboardSnapshotCards({ activeAnimalsSummary, feedCost, predict
         variant="success"
         icon={<TrendingUp className="h-4 w-4" />}
         density="compact"
+        onClick={() => onNavigate("/reports/performance")}
       />
       <StatCard
         title="Total Feed Cost"
@@ -35,6 +43,7 @@ export function DashboardSnapshotCards({ activeAnimalsSummary, feedCost, predict
         description="Last 30 days"
         icon={<Wallet className="h-4 w-4" />}
         density="compact"
+        onClick={() => onNavigate("/feed/analysis")}
       />
       <StatCard
         title="Underperforming"
@@ -43,6 +52,7 @@ export function DashboardSnapshotCards({ activeAnimalsSummary, feedCost, predict
         variant={(activeAnimalsSummary?.underperforming ?? 0) > 0 ? "warning" : "default"}
         icon={<AlertTriangle className="h-4 w-4" />}
         density="compact"
+        onClick={() => onNavigate("/animals")}
       />
       <StatCard
         title="Projected Revenue"
@@ -53,6 +63,7 @@ export function DashboardSnapshotCards({ activeAnimalsSummary, feedCost, predict
         variant="success"
         icon={<DollarSign className="h-4 w-4" />}
         density="compact"
+        onClick={() => onNavigate("/reports/profitability")}
       />
       <StatCard
         title="Recommended Sales"
@@ -60,6 +71,7 @@ export function DashboardSnapshotCards({ activeAnimalsSummary, feedCost, predict
         description="Within optimal window"
         icon={<Target className="h-4 w-4" />}
         density="compact"
+        onClick={() => onNavigate("/market/predictions")}
       />
     </div>
   );

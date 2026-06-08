@@ -382,6 +382,7 @@ export function DashboardPage() {
         activeAnimalsSummary={activeAnimalsSummary}
         feedCost={feedCostQuery.data}
         predictions={predictions}
+        onNavigate={(route) => navigate({ to: route })}
       />
 
       <DashboardHealthSummaryCard

@@ -1,10 +1,19 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { SlidersHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
 import { useAnimalSpecies } from "@/features/animals/hooks/useAnimalSpecies";
 import { usePens } from "@/features/animals/hooks/usePens";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { feedTypeService } from "@/features/feed/services/feedTypeService";
 import {
   getDefaultFeedCostAnalysisFilters,
@@ -31,7 +40,9 @@ function isoDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
-function rangeForPreset(preset: DatePreset): Pick<FeedCostAnalysisFilters, "startDate" | "endDate"> {
+function rangeForPreset(
+  preset: DatePreset,
+): Pick<FeedCostAnalysisFilters, "startDate" | "endDate"> {
   const end = new Date();
   const start = new Date();
 
@@ -48,7 +59,9 @@ function rangeForPreset(preset: DatePreset): Pick<FeedCostAnalysisFilters, "star
 
 function FeedCostAnalysisPage() {
   const { currentFarm } = useCurrentFarm();
+  const isMobile = useIsMobile();
   const [datePreset, setDatePreset] = useState<DatePreset>("30");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [filters, setFilters] = useState<FeedCostAnalysisFilters>(
     getDefaultFeedCostAnalysisFilters,
   );
@@ -76,15 +89,29 @@ function FeedCostAnalysisPage() {
         description="Where feed money is going, and whether it is turning into profitable gain."
       />
 
-      <FeedCostFilters
-        filters={filters}
-        datePreset={datePreset}
-        feedTypes={feedTypesQuery.data ?? []}
-        species={speciesQuery.data ?? []}
-        pens={pensQuery.data ?? []}
-        onPresetChange={onPresetChange}
-        onFiltersChange={setFilters}
-      />
+      {isMobile && (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full justify-center gap-2 border-farm-600/50 bg-farm-800/70 text-foreground hover:bg-farm-700/60"
+          onClick={() => setShowMobileFilters((current) => !current)}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          {showMobileFilters ? "Hide Filters" : "Show Filters"}
+        </Button>
+      )}
+
+      {(!isMobile || showMobileFilters) && (
+        <FeedCostFilters
+          filters={filters}
+          datePreset={datePreset}
+          feedTypes={feedTypesQuery.data ?? []}
+          species={speciesQuery.data ?? []}
+          pens={pensQuery.data ?? []}
+          onPresetChange={onPresetChange}
+          onFiltersChange={setFilters}
+        />
+      )}
 
       {analysisQuery.isLoading && (
         <div className="rounded-xl border bg-farm-800/80 p-5 text-sm text-farm-muted">
@@ -112,9 +139,47 @@ function FeedCostAnalysisPage() {
             <FeedCostByPenChart data={analysis.costByPen} />
           </div>
 
-          <FeedEfficiencyTable rows={analysis.feedEfficiencyRows} />
-          <AnimalFeedCostTable rows={analysis.animalRows} />
-          <PenFeedCostTable rows={analysis.penRows} />
+          {isMobile ? (
+            <Accordion
+              type="multiple"
+              defaultValue={["feed-efficiency"]}
+              className="rounded-xl border border-farm-600/35 bg-farm-800/55 px-3"
+            >
+              <AccordionItem value="feed-efficiency" className="border-farm-600/30">
+                <AccordionTrigger className="py-3 text-sm font-semibold hover:no-underline data-[state=open]:text-farm-lime [&[data-state=open]>svg]:text-farm-lime">
+                  Feed Efficiency
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <FeedEfficiencyTable rows={analysis.feedEfficiencyRows} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="animal-feed-cost" className="border-farm-600/30">
+                <AccordionTrigger className="py-3 text-sm font-semibold hover:no-underline data-[state=open]:text-farm-lime [&[data-state=open]>svg]:text-farm-lime">
+                  Animal Feed Cost
+                </AccordionTrigger>
+                <AccordionContent className="pb-4">
+                  <AnimalFeedCostTable rows={analysis.animalRows} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="pen-feed-cost" className="border-farm-600/30">
+                <AccordionTrigger className="py-3 text-sm font-semibold hover:no-underline data-[state=open]:text-farm-lime [&[data-state=open]>svg]:text-farm-lime">
+                  Pen Feed Cost
+                </AccordionTrigger>
+                <AccordionContent className="pb-1">
+                  <PenFeedCostTable rows={analysis.penRows} />
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          ) : (
+            <>
+              <FeedEfficiencyTable rows={analysis.feedEfficiencyRows} />
+              <AnimalFeedCostTable rows={analysis.animalRows} />
+              <PenFeedCostTable rows={analysis.penRows} />
+            </>
+          )}
+
           <FeedCostInsights insights={analysis.insights} />
         </>
       )}

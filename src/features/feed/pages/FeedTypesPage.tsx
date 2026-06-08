@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { AlertTriangle, CalendarDays, CircleDollarSign, Scale, SlidersHorizontal, Wheat } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
+import { StatCard } from "@/shared/components/ui/StatCard";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
 import { useAnimalSpecies } from "@/features/animals/hooks/useAnimalSpecies";
 import { useFeedInventory, useFeedInventoryActions } from "../hooks/useFeedInventory";
@@ -50,6 +53,13 @@ type BatchFormState = {
   storageLocation: string;
 };
 
+type FeedTypeFilterState = {
+  search: string;
+  category: FeedCategory | "all";
+  speciesId: string;
+  stockStatus: "all" | "in_stock" | "low_stock" | "out_of_stock" | "expiring_soon";
+};
+
 const emptyFeedTypeForm: FeedTypeFormState = {
   name: "",
   speciesId: "",
@@ -71,6 +81,13 @@ const emptyBatchForm: BatchFormState = {
   storageLocation: "",
 };
 
+const emptyFilters: FeedTypeFilterState = {
+  search: "",
+  category: "all",
+  speciesId: "all",
+  stockStatus: "all",
+};
+
 function formatKg(value: number) {
   return `${value.toFixed(2)} kg`;
 }
@@ -81,6 +98,7 @@ function formatMoney(value: number) {
 
 export function FeedTypesPage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { currentFarm } = useCurrentFarm();
   const speciesQuery = useAnimalSpecies();
   const inventoryQuery = useFeedInventory(currentFarm.id);
@@ -90,9 +108,11 @@ export function FeedTypesPage() {
   const [batchForm, setBatchForm] = useState<BatchFormState>(emptyBatchForm);
   const [feedTypeDialogOpen, setFeedTypeDialogOpen] = useState(false);
   const [batchDialogOpen, setBatchDialogOpen] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [filters, setFilters] = useState<FeedTypeFilterState>(emptyFilters);
 
   const inventory = inventoryQuery.data;
-  const rows = inventory?.rows ?? [];
+  const rows = useMemo(() => inventory?.rows ?? [], [inventory?.rows]);
 
   const speciesLabelById = useMemo(() => {
     const map = new Map<string, string>();
@@ -101,6 +121,41 @@ export function FeedTypesPage() {
     }
     return map;
   }, [speciesQuery.data]);
+
+  const filteredRows = useMemo(() => {
+    const search = filters.search.trim().toLowerCase();
+
+    return rows.filter((row) => {
+      const feedType = row.feedType;
+      const speciesLabel = feedType.species_id ? speciesLabelById.get(feedType.species_id) : "All";
+      const matchesSearch =
+        !search ||
+        feedType.name.toLowerCase().includes(search) ||
+        feedType.category.replaceAll("_", " ").toLowerCase().includes(search) ||
+        (speciesLabel ?? "").toLowerCase().includes(search);
+
+      const matchesCategory = filters.category === "all" || feedType.category === filters.category;
+      const matchesSpecies =
+        filters.speciesId === "all" ||
+        (filters.speciesId === "unassigned" && !feedType.species_id) ||
+        feedType.species_id === filters.speciesId;
+
+      const matchesStockStatus =
+        filters.stockStatus === "all" ||
+        (filters.stockStatus === "in_stock" && row.stockOnHandKg > 0 && !row.lowStock) ||
+        (filters.stockStatus === "low_stock" && row.stockOnHandKg > 0 && row.lowStock) ||
+        (filters.stockStatus === "out_of_stock" && row.stockOnHandKg <= 0) ||
+        (filters.stockStatus === "expiring_soon" && row.expiringSoonBatches > 0);
+
+      return matchesSearch && matchesCategory && matchesSpecies && matchesStockStatus;
+    });
+  }, [filters, rows, speciesLabelById]);
+
+  const hasActiveFilters =
+    filters.search.trim() !== "" ||
+    filters.category !== "all" ||
+    filters.speciesId !== "all" ||
+    filters.stockStatus !== "all";
 
   const openBatchDialog = (feedTypeId: string) => {
     setBatchForm((current) => ({ ...current, feedTypeId }));
@@ -320,36 +375,244 @@ export function FeedTypesPage() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <div className="rounded-xl border bg-farm-800/80 p-4">
-          <div className="text-xs text-farm-muted">Total Feed Types</div>
-          <div className="mt-2 text-xl font-semibold">{inventory?.summary.totalFeedTypes ?? 0}</div>
-        </div>
-        <div className="rounded-xl border bg-farm-800/80 p-4">
-          <div className="text-xs text-farm-muted">Total Stock on Hand</div>
-          <div className="mt-2 text-xl font-semibold">
-            {formatKg(inventory?.summary.totalStockOnHandKg ?? 0)}
-          </div>
-        </div>
-        <div className="rounded-xl border bg-farm-800/80 p-4">
-          <div className="text-xs text-farm-muted">Low Stock Items</div>
-          <div className="mt-2 text-xl font-semibold">{inventory?.summary.lowStockItems ?? 0}</div>
-        </div>
-        <div className="rounded-xl border bg-farm-800/80 p-4">
-          <div className="text-xs text-farm-muted">Expiring Soon</div>
-          <div className="mt-2 text-xl font-semibold">
-            {inventory?.summary.expiringSoonItems ?? 0}
-          </div>
-        </div>
-        <div className="rounded-xl border bg-farm-800/80 p-4">
-          <div className="text-xs text-farm-muted">Total Stock Value</div>
-          <div className="mt-2 text-xl font-semibold">
-            {formatMoney(inventory?.summary.totalStockValue ?? 0)}
-          </div>
-        </div>
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-5">
+        <StatCard
+          title="Total Feed Types"
+          value={String(inventory?.summary.totalFeedTypes ?? 0)}
+          icon={<Wheat className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Total Stock on Hand"
+          value={formatKg(inventory?.summary.totalStockOnHandKg ?? 0)}
+          icon={<Scale className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Low Stock Items"
+          value={String(inventory?.summary.lowStockItems ?? 0)}
+          icon={<AlertTriangle className="h-4 w-4" />}
+          variant={(inventory?.summary.lowStockItems ?? 0) > 0 ? "warning" : "default"}
+          density="compact"
+        />
+        <StatCard
+          title="Expiring Soon"
+          value={String(inventory?.summary.expiringSoonItems ?? 0)}
+          icon={<CalendarDays className="h-4 w-4" />}
+          variant={(inventory?.summary.expiringSoonItems ?? 0) > 0 ? "warning" : "default"}
+          density="compact"
+        />
+        <StatCard
+          title="Total Stock Value"
+          value={formatMoney(inventory?.summary.totalStockValue ?? 0)}
+          icon={<CircleDollarSign className="h-4 w-4" />}
+          density="compact"
+        />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border bg-farm-800/80">
+      {isMobile && (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full justify-center gap-2 border-farm-600/50 bg-farm-800/70 text-foreground hover:bg-farm-700/60"
+          onClick={() => setShowMobileFilters((current) => !current)}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          {showMobileFilters ? "Hide Filters" : "Show Filters"}
+        </Button>
+      )}
+
+      {(!isMobile || showMobileFilters) && (
+      <div className="grid grid-cols-1 gap-3 rounded-2xl border bg-farm-800/80 p-4 md:grid-cols-5">
+        <Input
+          className="md:col-span-2"
+          placeholder="Search feed name, category, species..."
+          value={filters.search}
+          onChange={(event) =>
+            setFilters((current) => ({ ...current, search: event.target.value }))
+          }
+        />
+        <select
+          className="h-9 w-full rounded-md border border-input bg-farm-900 px-3 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          value={filters.category}
+          onChange={(event) =>
+            setFilters((current) => ({
+              ...current,
+              category: event.target.value as FeedTypeFilterState["category"],
+            }))
+          }
+        >
+          <option value="all" className="bg-farm-900 text-foreground">
+            All categories
+          </option>
+          {feedCategories.map((category) => (
+            <option key={category} value={category} className="bg-farm-900 text-foreground">
+              {category.replaceAll("_", " ")}
+            </option>
+          ))}
+        </select>
+        <select
+          className="h-9 w-full rounded-md border border-input bg-farm-900 px-3 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          value={filters.speciesId}
+          onChange={(event) =>
+            setFilters((current) => ({ ...current, speciesId: event.target.value }))
+          }
+        >
+          <option value="all" className="bg-farm-900 text-foreground">
+            All species
+          </option>
+          <option value="unassigned" className="bg-farm-900 text-foreground">
+            General feeds
+          </option>
+          {(speciesQuery.data ?? []).map((species) => (
+            <option key={species.id} value={species.id} className="bg-farm-900 text-foreground">
+              {species.name}
+            </option>
+          ))}
+        </select>
+        <div className="flex gap-2">
+          <select
+            className="h-9 min-w-0 flex-1 rounded-md border border-input bg-farm-900 px-3 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            value={filters.stockStatus}
+            onChange={(event) =>
+              setFilters((current) => ({
+                ...current,
+                stockStatus: event.target.value as FeedTypeFilterState["stockStatus"],
+              }))
+            }
+          >
+            <option value="all" className="bg-farm-900 text-foreground">
+              All stock
+            </option>
+            <option value="in_stock" className="bg-farm-900 text-foreground">
+              In stock
+            </option>
+            <option value="low_stock" className="bg-farm-900 text-foreground">
+              Low stock
+            </option>
+            <option value="out_of_stock" className="bg-farm-900 text-foreground">
+              Out of stock
+            </option>
+            <option value="expiring_soon" className="bg-farm-900 text-foreground">
+              Expiring soon
+            </option>
+          </select>
+          {hasActiveFilters && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9"
+              onClick={() => setFilters(emptyFilters)}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+      </div>
+      )}
+
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-foreground sm:text-base">Feed Type List</h2>
+        <span className="text-xs text-farm-muted">{filteredRows.length} items</span>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:hidden">
+        {filteredRows.map((row) => (
+          <div
+            key={row.feedType.id}
+            className="rounded-2xl border bg-farm-800/80 p-4 text-left transition hover:bg-farm-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-farm-lime/70"
+            role="link"
+            tabIndex={0}
+            onClick={() =>
+              navigate({
+                to: "/feed/types/$id",
+                params: { id: row.feedType.id },
+              })
+            }
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                navigate({
+                  to: "/feed/types/$id",
+                  params: { id: row.feedType.id },
+                });
+              }
+            }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="font-semibold">{row.feedType.name}</div>
+                <div className="mt-1 text-xs capitalize text-farm-muted">
+                  {row.feedType.category.replaceAll("_", " ")} ·{" "}
+                  {row.feedType.species_id
+                    ? (speciesLabelById.get(row.feedType.species_id) ?? "-")
+                    : "All species"}
+                </div>
+              </div>
+              <span
+                className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${
+                  row.stockOnHandKg > 0
+                    ? row.lowStock
+                      ? "bg-amber-500/20 text-amber-200"
+                      : "bg-emerald-500/20 text-emerald-200"
+                    : "bg-farm-danger/20 text-farm-danger"
+                }`}
+              >
+                {row.stockOnHandKg > 0 ? (row.lowStock ? "Low" : "In Stock") : "Out"}
+              </span>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <div className="text-xs text-farm-muted">Stock</div>
+                <div className="mt-1 font-medium">{formatKg(row.stockOnHandKg)}</div>
+              </div>
+              <div>
+                <div className="text-xs text-farm-muted">Avg Cost / Kg</div>
+                <div className="mt-1 font-medium">{formatMoney(row.averageCostPerKg)}</div>
+              </div>
+              <div>
+                <div className="text-xs text-farm-muted">Protein</div>
+                <div className="mt-1 font-medium">
+                  {row.feedType.protein_percentage === null
+                    ? "-"
+                    : `${Number(row.feedType.protein_percentage).toFixed(2)}%`}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-farm-muted">Dry Matter</div>
+                <div className="mt-1 font-medium">
+                  {row.feedType.dry_matter_percentage === null
+                    ? "-"
+                    : `${Number(row.feedType.dry_matter_percentage).toFixed(2)}%`}
+                </div>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              type="button"
+              className="mt-4 w-full"
+              onClick={(event) => {
+                event.stopPropagation();
+                openBatchDialog(row.feedType.id);
+              }}
+            >
+              Add Batch
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {!inventoryQuery.isLoading && filteredRows.length === 0 && (
+        <div className="rounded-2xl border bg-farm-800/80 p-5 text-sm text-farm-muted md:hidden">
+          {rows.length === 0
+            ? "No feed types found for this farm."
+            : "No feed types match the selected filters."}
+        </div>
+      )}
+
+      <div className="hidden overflow-x-auto rounded-xl border bg-farm-800/80 md:block">
         <table className="w-full min-w-245 text-sm">
           <thead className="bg-farm-900/60 text-xs uppercase tracking-wider text-farm-muted">
             <tr>
@@ -365,7 +628,7 @@ export function FeedTypesPage() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {filteredRows.map((row) => (
               <tr
                 key={row.feedType.id}
                 className="cursor-pointer border-t border-farm-600/30 hover:bg-farm-700/30"
@@ -447,8 +710,12 @@ export function FeedTypesPage() {
         {inventoryQuery.isLoading && (
           <div className="p-5 text-sm text-farm-muted">Loading feeds...</div>
         )}
-        {!inventoryQuery.isLoading && rows.length === 0 && (
-          <div className="p-5 text-sm text-farm-muted">No feed types found for this farm.</div>
+        {!inventoryQuery.isLoading && filteredRows.length === 0 && (
+          <div className="p-5 text-sm text-farm-muted">
+            {rows.length === 0
+              ? "No feed types found for this farm."
+              : "No feed types match the selected filters."}
+          </div>
         )}
       </div>
 

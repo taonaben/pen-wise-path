@@ -1,7 +1,21 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import {
+  CalendarDays,
+  CircleDollarSign,
+  Scale,
+  SlidersHorizontal,
+  Users,
+  Wheat,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +26,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
+import { StatCard } from "@/shared/components/ui/StatCard";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
 import { useAnimals } from "@/features/animals/hooks/useAnimals";
 import { usePens } from "@/features/animals/hooks/usePens";
@@ -66,7 +82,9 @@ function startOfWeekIsoDate() {
 
 export function FeedRecordsPage() {
   const { currentFarm } = useCurrentFarm();
+  const isMobile = useIsMobile();
   const [recordOpen, setRecordOpen] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [recordForm, setRecordForm] = useState<RecordFormState>(emptyForm);
 
   const [dateFrom, setDateFrom] = useState(startOfWeekIsoDate());
@@ -334,99 +352,224 @@ export function FeedRecordsPage() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <div className="rounded-xl border bg-farm-800/80 p-4">
-          <div className="text-xs text-farm-muted">Feedings Today</div>
-          <div className="mt-2 text-xl font-semibold">{summary.todayEvents}</div>
-        </div>
-        <div className="rounded-xl border bg-farm-800/80 p-4">
-          <div className="text-xs text-farm-muted">Total Feed Used This Week</div>
-          <div className="mt-2 text-xl font-semibold">{formatKg(summary.totalFeedUsedWeekKg)}</div>
-        </div>
-        <div className="rounded-xl border bg-farm-800/80 p-4">
-          <div className="text-xs text-farm-muted">Feed Cost This Week</div>
-          <div className="mt-2 text-xl font-semibold">{formatMoney(summary.feedCostWeek)}</div>
-        </div>
-        <div className="rounded-xl border bg-farm-800/80 p-4">
-          <div className="text-xs text-farm-muted">Animals Fed This Week</div>
-          <div className="mt-2 text-xl font-semibold">{summary.animalsFedWeek}</div>
-        </div>
-        <div className="rounded-xl border bg-farm-800/80 p-4">
-          <div className="text-xs text-farm-muted">Most Used Feed</div>
-          <div className="mt-2 text-xl font-semibold">{summary.mostUsedFeed}</div>
-        </div>
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+        <StatCard
+          title="Feedings Today"
+          value={String(summary.todayEvents)}
+          icon={<CalendarDays className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Total Feed Used This Week"
+          value={formatKg(summary.totalFeedUsedWeekKg)}
+          icon={<Scale className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Feed Cost This Week"
+          value={formatMoney(summary.feedCostWeek)}
+          icon={<CircleDollarSign className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Animals Fed This Week"
+          value={String(summary.animalsFedWeek)}
+          icon={<Users className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Most Used Feed"
+          value={summary.mostUsedFeed}
+          icon={<Wheat className="h-4 w-4" />}
+          density="compact"
+        />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Input
-          type="date"
-          value={dateFrom}
-          onChange={(event) => setDateFrom(event.target.value)}
-          placeholder="From"
-        />
-        <Input
-          type="date"
-          value={dateTo}
-          onChange={(event) => setDateTo(event.target.value)}
-          placeholder="To"
-        />
-        <select
-          className="h-9 w-full rounded-md border border-input bg-farm-900 px-3 py-1 text-sm text-foreground"
-          value={feedTypeFilter}
-          onChange={(event) => setFeedTypeFilter(event.target.value)}
+      {isMobile && (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full justify-center gap-2 border-farm-600/50 bg-farm-800/70 text-foreground hover:bg-farm-700/60"
+          onClick={() => setShowMobileFilters((current) => !current)}
         >
-          <option value="" className="bg-farm-900 text-foreground">
-            All feed types
-          </option>
-          {(feedTypesQuery.data ?? []).map((feedType) => (
-            <option key={feedType.id} value={feedType.id} className="bg-farm-900 text-foreground">
-              {feedType.name}
+          <SlidersHorizontal className="h-4 w-4" />
+          {showMobileFilters ? "Hide Filters" : "Show Filters"}
+        </Button>
+      )}
+
+      {(!isMobile || showMobileFilters) && (
+        <div className="grid grid-cols-1 gap-3 rounded-xl border bg-farm-800/80 p-3 sm:grid-cols-3 sm:p-4">
+          <Input
+            type="date"
+            value={dateFrom}
+            onChange={(event) => setDateFrom(event.target.value)}
+            placeholder="From"
+          />
+          <Input
+            type="date"
+            value={dateTo}
+            onChange={(event) => setDateTo(event.target.value)}
+            placeholder="To"
+          />
+          <select
+            className="h-9 w-full rounded-md border border-input bg-farm-900 px-3 py-1 text-sm text-foreground"
+            value={feedTypeFilter}
+            onChange={(event) => setFeedTypeFilter(event.target.value)}
+          >
+            <option value="" className="bg-farm-900 text-foreground">
+              All feed types
             </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="overflow-x-auto rounded-xl border bg-farm-800/80">
-        <table className="w-full min-w-245 text-sm">
-          <thead className="bg-farm-900/60 text-xs uppercase tracking-wider text-farm-muted">
-            <tr>
-              <th className="px-5 py-3 text-left font-medium">Date</th>
-              <th className="px-5 py-3 text-left font-medium">Feed Type</th>
-              <th className="px-5 py-3 text-left font-medium">Scope</th>
-              <th className="px-5 py-3 text-left font-medium">Target</th>
-              <th className="px-5 py-3 text-left font-medium">Quantity</th>
-              <th className="px-5 py-3 text-left font-medium">Animals Fed</th>
-              <th className="px-5 py-3 text-left font-medium">Total Cost</th>
-              <th className="px-5 py-3 text-left font-medium">Allocation</th>
-              <th className="px-5 py-3 text-left font-medium">Recorded By</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.map((event) => (
-              <tr key={event.id} className="border-t border-farm-600/30">
-                <td className="px-5 py-3">{new Date(event.date).toLocaleDateString()}</td>
-                <td className="px-5 py-3 font-medium">{event.feedTypeName}</td>
-                <td className="px-5 py-3 capitalize">{event.scope.replaceAll("_", " ")}</td>
-                <td className="px-5 py-3 text-farm-muted">{event.target}</td>
-                <td className="px-5 py-3">{formatKg(event.quantityKg)}</td>
-                <td className="px-5 py-3">{event.animalsFed}</td>
-                <td className="px-5 py-3">{formatMoney(event.totalCost)}</td>
-                <td className="px-5 py-3 capitalize">
-                  {event.allocationMethod.replaceAll("_", " ")}
-                </td>
-                <td className="px-5 py-3 text-farm-muted">{event.recordedBy ?? "-"}</td>
-              </tr>
+            {(feedTypesQuery.data ?? []).map((feedType) => (
+              <option key={feedType.id} value={feedType.id} className="bg-farm-900 text-foreground">
+                {feedType.name}
+              </option>
             ))}
-          </tbody>
-        </table>
+          </select>
+          <select
+            className="h-9 w-full rounded-md border border-input bg-farm-900 px-3 py-1 text-sm text-foreground sm:col-span-3"
+            value={scopeFilter}
+            onChange={(event) => setScopeFilter(event.target.value as "" | FeedingMethod)}
+          >
+            <option value="" className="bg-farm-900 text-foreground">
+              All scopes
+            </option>
+            <option value="individual" className="bg-farm-900 text-foreground">
+              Individual animal
+            </option>
+            <option value="pen_group" className="bg-farm-900 text-foreground">
+              Pen / group
+            </option>
+          </select>
+        </div>
+      )}
 
-        {eventsQuery.isLoading && (
-          <div className="p-5 text-sm text-farm-muted">Loading feeding events...</div>
-        )}
-        {!eventsQuery.isLoading && events.length === 0 && (
-          <div className="p-5 text-sm text-farm-muted">No feeding events found.</div>
-        )}
-      </div>
+      {isMobile ? (
+        <Accordion
+          type="multiple"
+          defaultValue={["feeding-events"]}
+          className="rounded-xl border border-farm-600/35 bg-farm-800/55 px-3"
+        >
+          <AccordionItem value="feeding-events" className="border-farm-600/30">
+            <AccordionTrigger className="py-3 text-sm font-semibold hover:no-underline data-[state=open]:text-farm-lime [&[data-state=open]>svg]:text-farm-lime">
+              Feeding Events
+            </AccordionTrigger>
+            <AccordionContent className="pb-3">
+              <div className="space-y-3">
+                {events.map((event) => (
+                  <div
+                    key={event.id}
+                    className="rounded-xl border border-farm-600/35 bg-farm-900/45 p-3"
+                  >
+                    <div className="mb-3 flex items-start justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">
+                          {event.feedTypeName}
+                        </div>
+                        <div className="text-xs text-farm-muted">
+                          {new Date(event.date).toLocaleDateString()} • {event.target}
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-farm-700/50 px-2 py-1 text-xs capitalize text-foreground">
+                        {event.scope.replaceAll("_", " ")}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                      <div>
+                        <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                          Quantity
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {formatKg(event.quantityKg)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                          Animals fed
+                        </div>
+                        <div className="font-medium text-foreground">{event.animalsFed}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                          Total cost
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {formatMoney(event.totalCost)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                          Allocation
+                        </div>
+                        <div className="font-medium capitalize text-foreground">
+                          {event.allocationMethod.replaceAll("_", " ")}
+                        </div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-[11px] uppercase tracking-wide text-farm-muted">
+                          Recorded by
+                        </div>
+                        <div className="font-medium text-foreground">{event.recordedBy ?? "-"}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {eventsQuery.isLoading && (
+                  <div className="p-2 text-sm text-farm-muted">Loading feeding events...</div>
+                )}
+                {!eventsQuery.isLoading && events.length === 0 && (
+                  <div className="p-2 text-sm text-farm-muted">No feeding events found.</div>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border bg-farm-800/80">
+          <table className="w-full min-w-245 text-sm">
+            <thead className="bg-farm-900/60 text-xs uppercase tracking-wider text-farm-muted">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium sm:px-4">Date</th>
+                <th className="px-3 py-2 text-left font-medium sm:px-4">Feed Type</th>
+                <th className="px-3 py-2 text-left font-medium sm:px-4">Scope</th>
+                <th className="px-3 py-2 text-left font-medium sm:px-4">Target</th>
+                <th className="px-3 py-2 text-left font-medium sm:px-4">Quantity</th>
+                <th className="px-3 py-2 text-left font-medium sm:px-4">Animals Fed</th>
+                <th className="px-3 py-2 text-left font-medium sm:px-4">Total Cost</th>
+                <th className="px-3 py-2 text-left font-medium sm:px-4">Allocation</th>
+                <th className="px-3 py-2 text-left font-medium sm:px-4">Recorded By</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.map((event) => (
+                <tr key={event.id} className="border-t border-farm-600/30">
+                  <td className="px-3 py-2 sm:px-4">{new Date(event.date).toLocaleDateString()}</td>
+                  <td className="px-3 py-2 font-medium sm:px-4">{event.feedTypeName}</td>
+                  <td className="px-3 py-2 capitalize sm:px-4">
+                    {event.scope.replaceAll("_", " ")}
+                  </td>
+                  <td className="px-3 py-2 text-farm-muted sm:px-4">{event.target}</td>
+                  <td className="px-3 py-2 sm:px-4">{formatKg(event.quantityKg)}</td>
+                  <td className="px-3 py-2 sm:px-4">{event.animalsFed}</td>
+                  <td className="px-3 py-2 sm:px-4">{formatMoney(event.totalCost)}</td>
+                  <td className="px-3 py-2 capitalize sm:px-4">
+                    {event.allocationMethod.replaceAll("_", " ")}
+                  </td>
+                  <td className="px-3 py-2 text-farm-muted sm:px-4">{event.recordedBy ?? "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {eventsQuery.isLoading && (
+            <div className="p-4 text-sm text-farm-muted">Loading feeding events...</div>
+          )}
+          {!eventsQuery.isLoading && events.length === 0 && (
+            <div className="p-4 text-sm text-farm-muted">No feeding events found.</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

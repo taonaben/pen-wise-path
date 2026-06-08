@@ -11,6 +11,7 @@ type Props = {
   icon?: ReactNode;
   variant?: Variant;
   density?: "default" | "compact";
+  onClick?: () => void;
 };
 
 const accent: Record<Variant, string> = {
@@ -28,11 +29,18 @@ export function StatCard({
   icon,
   variant = "default",
   density = "default",
+  onClick,
 }: Props) {
+  const Component = onClick ? "button" : "div";
+
   return (
-    <div
+    <Component
+      type={onClick ? "button" : undefined}
+      onClick={onClick}
       className={cn(
-        "rounded-2xl border bg-farm-800/80 backdrop-blur-sm transition hover:bg-farm-800",
+        "w-full rounded-2xl border bg-farm-800/80 text-left backdrop-blur-sm transition hover:bg-farm-800",
+        onClick &&
+          "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-farm-lime/70 focus-visible:ring-offset-2 focus-visible:ring-offset-farm-950",
         density === "compact" ? "p-3.5 sm:p-4" : "p-5",
       )}
     >
@@ -76,6 +84,6 @@ export function StatCard({
           {description && <span className="text-farm-muted">{description}</span>}
         </div>
       )}
-    </div>
+    </Component>
   );
 }
