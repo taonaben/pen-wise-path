@@ -1,8 +1,25 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts";
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 import { toast } from "sonner";
-import { Brain, CircleDollarSign, Eye, Menu, Search, TrendingUp, TriangleAlert, UserRound } from "lucide-react";
+import {
+  Brain,
+  CircleDollarSign,
+  Eye,
+  Menu,
+  Search,
+  TrendingUp,
+  TriangleAlert,
+  UserRound,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -65,6 +82,21 @@ function confidenceClass(value: SellingPredictionViewModel["confidenceLabel"]) {
   return "text-farm-danger";
 }
 
+type RecommendationFilter =
+  | "ALL"
+  | "SELL_NOW"
+  | "HOLD"
+  | "LOW_CONFIDENCE"
+  | "INSPECT_BEFORE_SELLING";
+
+function filterLabel(value: RecommendationFilter) {
+  if (value === "SELL_NOW") return "Recommended to Sell";
+  if (value === "HOLD") return "Best Hold Candidates";
+  if (value === "LOW_CONFIDENCE") return "Low Confidence";
+  if (value === "INSPECT_BEFORE_SELLING") return "Need Inspection";
+  return "All";
+}
+
 function PredictionDetail({ prediction }: { prediction: SellingPredictionViewModel }) {
   const assumptions = prediction.metadata;
   const confidenceReasons = Array.isArray(assumptions.confidence_reasons)
@@ -99,22 +131,91 @@ function PredictionDetail({ prediction }: { prediction: SellingPredictionViewMod
         <div className="mb-3 text-sm font-medium">Profit Curve</div>
         <div className="h-56">
           <ResponsiveContainer>
-            <LineChart data={prediction.windows} margin={{ top: 10, right: 16, bottom: 0, left: -8 }}>
+            <LineChart
+              data={prediction.windows}
+              margin={{ top: 10, right: 16, bottom: 0, left: -8 }}
+            >
               <CartesianGrid stroke="#16483a" strokeDasharray="3 3" />
-              <XAxis dataKey="days" stroke="#9cb8aa" fontSize={11} tickFormatter={(value) => `${value}d`} />
+              <XAxis
+                dataKey="days"
+                stroke="#9cb8aa"
+                fontSize={11}
+                tickFormatter={(value) => `${value}d`}
+              />
               <YAxis stroke="#9cb8aa" fontSize={11} tickFormatter={(value) => `$${value}`} />
               <Tooltip
                 formatter={(value) => formatMoney(Number(value))}
                 labelFormatter={(value) => `${value} days`}
-                contentStyle={{ background: "#062f25", border: "1px solid #16483a", borderRadius: 12 }}
+                contentStyle={{
+                  background: "#062f25",
+                  border: "1px solid #16483a",
+                  borderRadius: 12,
+                }}
               />
-              <Line type="monotone" dataKey="expected_profit" stroke="#b7f34a" strokeWidth={2.5} dot={false} />
+              <Line
+                type="monotone"
+                dataKey="expected_profit"
+                stroke="#b7f34a"
+                strokeWidth={2.5}
+                dot={false}
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border bg-farm-900/40">
+      <div className="space-y-2 md:hidden">
+        {prediction.windows.map((window) => (
+          <div key={window.days} className="rounded-xl border bg-farm-900/40 p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-farm-muted">Window</span>
+              <span className="text-sm font-semibold">
+                {window.days === 0 ? "Now" : `${window.days} days`}
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-lg bg-farm-900/50 p-2">
+                <div className="text-farm-muted">Weight</div>
+                <div className="mt-1 font-medium text-foreground">
+                  {formatKg(window.predicted_weight)}
+                </div>
+              </div>
+              <div className="rounded-lg bg-farm-900/50 p-2">
+                <div className="text-farm-muted">Price</div>
+                <div className="mt-1 font-medium text-foreground">
+                  {formatMoney(window.predicted_price)}
+                </div>
+              </div>
+              <div className="rounded-lg bg-farm-900/50 p-2">
+                <div className="text-farm-muted">Future Feed</div>
+                <div className="mt-1 font-medium text-foreground">
+                  {formatMoney(window.future_feed_cost)}
+                </div>
+              </div>
+              <div className="rounded-lg bg-farm-900/50 p-2">
+                <div className="text-farm-muted">Revenue</div>
+                <div className="mt-1 font-medium text-foreground">
+                  {formatMoney(window.expected_revenue)}
+                </div>
+              </div>
+              <div className="rounded-lg bg-farm-900/50 p-2">
+                <div className="text-farm-muted">Profit</div>
+                <div className="mt-1 font-medium text-foreground">
+                  {formatMoney(window.expected_profit)}
+                </div>
+              </div>
+              <div className="rounded-lg bg-farm-900/50 p-2">
+                <div className="text-farm-muted">Change</div>
+                <div className="mt-1 font-medium text-foreground">
+                  {formatMoney(window.profit_change)}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-xl border bg-farm-900/40 md:block">
         <table className="w-full min-w-180 text-sm">
           <thead className="bg-farm-900/60 text-xs uppercase tracking-wider text-farm-muted">
             <tr>
@@ -168,7 +269,9 @@ function MarkSoldForm({
   onClose: () => void;
 }) {
   const markSold = useMarkAnimalSoldFromPrediction(farmId);
-  const [saleWeightKg, setSaleWeightKg] = useState(String(prediction.predictedWeightKg ?? prediction.currentWeightKg ?? ""));
+  const [saleWeightKg, setSaleWeightKg] = useState(
+    String(prediction.predictedWeightKg ?? prediction.currentWeightKg ?? ""),
+  );
   const [pricePerKg, setPricePerKg] = useState(String(prediction.currentMarketPrice ?? ""));
   const [soldAt, setSoldAt] = useState(new Date().toISOString().slice(0, 10));
   const [buyerName, setBuyerName] = useState("");
@@ -196,14 +299,34 @@ function MarkSoldForm({
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Input type="number" min={0} step="0.01" value={saleWeightKg} onChange={(event) => setSaleWeightKg(event.target.value)} placeholder="Sale weight kg" />
-        <Input type="number" min={0} step="0.01" value={pricePerKg} onChange={(event) => setPricePerKg(event.target.value)} placeholder="Price per kg" />
+        <Input
+          type="number"
+          min={0}
+          step="0.01"
+          value={saleWeightKg}
+          onChange={(event) => setSaleWeightKg(event.target.value)}
+          placeholder="Sale weight kg"
+        />
+        <Input
+          type="number"
+          min={0}
+          step="0.01"
+          value={pricePerKg}
+          onChange={(event) => setPricePerKg(event.target.value)}
+          placeholder="Price per kg"
+        />
       </div>
       <Input type="date" value={soldAt} onChange={(event) => setSoldAt(event.target.value)} />
-      <Input value={buyerName} onChange={(event) => setBuyerName(event.target.value)} placeholder="Buyer" />
+      <Input
+        value={buyerName}
+        onChange={(event) => setBuyerName(event.target.value)}
+        placeholder="Buyer"
+      />
       <Input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Notes" />
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
         <Button type="button" onClick={submit} disabled={markSold.isPending}>
           {markSold.isPending ? "Saving..." : "Mark as Sold"}
         </Button>
@@ -219,6 +342,7 @@ function PredictionsPage() {
   const runPredictions = useGenerateSellingPredictions(currentFarm.id);
   const [detailPrediction, setDetailPrediction] = useState<SellingPredictionViewModel | null>(null);
   const [salePrediction, setSalePrediction] = useState<SellingPredictionViewModel | null>(null);
+  const [recommendationFilter, setRecommendationFilter] = useState<RecommendationFilter>("ALL");
 
   const predictions = predictionsQuery.data?.predictions ?? [];
   const summary = useMemo(() => {
@@ -232,9 +356,17 @@ function PredictionsPage() {
     };
   }, [predictions]);
 
+  const filteredPredictions = useMemo(() => {
+    if (recommendationFilter === "ALL") return predictions;
+    if (recommendationFilter === "LOW_CONFIDENCE") {
+      return predictions.filter((row) => row.confidenceLabel === "Low");
+    }
+    return predictions.filter((row) => row.recommendation === recommendationFilter);
+  }, [predictions, recommendationFilter]);
+
   const onRunPredictions = async () => {
     try {
-      const result = await runPredictions.mutateAsync();
+      const result = await runPredictions.mutateAsync({});
       toast.success(`Prediction run complete: ${result.predictions_created} predictions created`);
     } catch {
       toast.error("Could not run selling predictions");
@@ -259,14 +391,111 @@ function PredictionsPage() {
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
-        <StatCard title="Recommended to Sell" value={String(summary.sellNow)} icon={<CircleDollarSign className="h-4 w-4" />} variant="success" />
-        <StatCard title="Best Hold Candidates" value={String(summary.hold)} icon={<TrendingUp className="h-4 w-4" />} />
-        <StatCard title="Projected Revenue" value={formatMoney(summary.revenue)} icon={<CircleDollarSign className="h-4 w-4" />} />
-        <StatCard title="Projected Profit" value={formatMoney(summary.profit)} icon={<TrendingUp className="h-4 w-4" />} variant={summary.profit >= 0 ? "success" : "danger"} />
-        <StatCard title="Low Confidence" value={String(summary.lowConfidence)} icon={<Search className="h-4 w-4" />} variant="warning" />
-        <StatCard title="Need Inspection" value={String(summary.inspect)} icon={<TriangleAlert className="h-4 w-4" />} variant="danger" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        <div
+          className={
+            recommendationFilter === "SELL_NOW"
+              ? "rounded-2xl ring-2 ring-farm-lime/70 ring-offset-2 ring-offset-farm-950"
+              : undefined
+          }
+        >
+          <StatCard
+            title="Recommended to Sell"
+            value={String(summary.sellNow)}
+            icon={<CircleDollarSign className="h-4 w-4" />}
+            variant="success"
+            density="compact"
+            onClick={() =>
+              setRecommendationFilter((current) => (current === "SELL_NOW" ? "ALL" : "SELL_NOW"))
+            }
+          />
+        </div>
+        <div
+          className={
+            recommendationFilter === "HOLD"
+              ? "rounded-2xl ring-2 ring-farm-lime/70 ring-offset-2 ring-offset-farm-950"
+              : undefined
+          }
+        >
+          <StatCard
+            title="Best Hold Candidates"
+            value={String(summary.hold)}
+            icon={<TrendingUp className="h-4 w-4" />}
+            density="compact"
+            onClick={() =>
+              setRecommendationFilter((current) => (current === "HOLD" ? "ALL" : "HOLD"))
+            }
+          />
+        </div>
+        <StatCard
+          title="Projected Revenue"
+          value={formatMoney(summary.revenue)}
+          icon={<CircleDollarSign className="h-4 w-4" />}
+          density="compact"
+        />
+        <StatCard
+          title="Projected Profit"
+          value={formatMoney(summary.profit)}
+          icon={<TrendingUp className="h-4 w-4" />}
+          variant={summary.profit >= 0 ? "success" : "danger"}
+          density="compact"
+        />
+        <div
+          className={
+            recommendationFilter === "LOW_CONFIDENCE"
+              ? "rounded-2xl ring-2 ring-farm-lime/70 ring-offset-2 ring-offset-farm-950"
+              : undefined
+          }
+        >
+          <StatCard
+            title="Low Confidence"
+            value={String(summary.lowConfidence)}
+            icon={<Search className="h-4 w-4" />}
+            variant="warning"
+            density="compact"
+            onClick={() =>
+              setRecommendationFilter((current) =>
+                current === "LOW_CONFIDENCE" ? "ALL" : "LOW_CONFIDENCE",
+              )
+            }
+          />
+        </div>
+        <div
+          className={
+            recommendationFilter === "INSPECT_BEFORE_SELLING"
+              ? "rounded-2xl ring-2 ring-farm-lime/70 ring-offset-2 ring-offset-farm-950"
+              : undefined
+          }
+        >
+          <StatCard
+            title="Need Inspection"
+            value={String(summary.inspect)}
+            icon={<TriangleAlert className="h-4 w-4" />}
+            variant="danger"
+            density="compact"
+            onClick={() =>
+              setRecommendationFilter((current) =>
+                current === "INSPECT_BEFORE_SELLING" ? "ALL" : "INSPECT_BEFORE_SELLING",
+              )
+            }
+          />
+        </div>
       </div>
+
+      {recommendationFilter !== "ALL" && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-farm-lime/30 bg-farm-900/45 px-3 py-2 text-xs text-farm-muted">
+          <span>Showing animals: {filterLabel(recommendationFilter)}</span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-7 px-2 text-xs"
+            onClick={() => setRecommendationFilter("ALL")}
+          >
+            Show All
+          </Button>
+        </div>
+      )}
 
       {predictionsQuery.data?.latestRun && (
         <div className="rounded-xl border bg-farm-800/80 p-4 text-sm text-farm-muted">
@@ -281,7 +510,93 @@ function PredictionsPage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border bg-farm-800/80">
+      <div className="space-y-2 md:hidden">
+        {filteredPredictions.map((row) => (
+          <div key={row.id} className="rounded-xl border bg-farm-800/80 p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-foreground">{row.tagNumber}</div>
+                <div className="text-xs text-farm-muted">{row.speciesName}</div>
+              </div>
+              <span
+                className={`rounded-full px-2 py-1 text-[10px] font-medium ${recommendationClass(row.recommendation)}`}
+              >
+                {recommendationLabel(row.recommendation)}
+              </span>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-lg bg-farm-900/45 p-2">
+                <div className="text-farm-muted">Current Weight</div>
+                <div className="mt-1 font-medium text-foreground">
+                  {formatKg(row.currentWeightKg)}
+                </div>
+              </div>
+              <div className="rounded-lg bg-farm-900/45 p-2">
+                <div className="text-farm-muted">ADG</div>
+                <div className="mt-1 font-medium text-foreground">
+                  {formatNumber(row.averageDailyGainKg, " kg/day")}
+                </div>
+              </div>
+              <div className="rounded-lg bg-farm-900/45 p-2">
+                <div className="text-farm-muted">Feed Cost</div>
+                <div className="mt-1 font-medium text-foreground">
+                  {formatMoney(Number(row.metadata.feed_cost_to_date ?? 0))}
+                </div>
+              </div>
+              <div className="rounded-lg bg-farm-900/45 p-2">
+                <div className="text-farm-muted">Market Price</div>
+                <div className="mt-1 font-medium text-foreground">
+                  {formatMoney(row.currentMarketPrice)}/kg
+                </div>
+              </div>
+              <div className="rounded-lg bg-farm-900/45 p-2">
+                <div className="text-farm-muted">Best Window</div>
+                <div className="mt-1 font-medium text-foreground">
+                  {row.bestWindowDays === 0 ? "Now" : `${row.bestWindowDays} days`}
+                </div>
+              </div>
+              <div className="rounded-lg bg-farm-900/45 p-2">
+                <div className="text-farm-muted">Expected Profit</div>
+                <div className="mt-1 font-medium text-foreground">
+                  {formatMoney(row.expectedProfit)}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between">
+              <span className={`text-xs font-semibold ${confidenceClass(row.confidenceLabel)}`}>
+                Confidence: {row.confidenceLabel}
+              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" size="icon" variant="ghost" aria-label="Prediction actions">
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem onClick={() => setDetailPrediction(row)}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    View prediction
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigate({ to: "/animals/$id", params: { id: row.animalId } })}
+                  >
+                    <UserRound className="mr-2 h-4 w-4" />
+                    View animal
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSalePrediction(row)}>
+                    <CircleDollarSign className="mr-2 h-4 w-4" />
+                    Mark sold
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-xl border bg-farm-800/80 md:block">
         <table className="w-full min-w-300 text-sm">
           <thead className="bg-farm-900/60 text-xs uppercase tracking-wider text-farm-muted">
             <tr>
@@ -298,31 +613,46 @@ function PredictionsPage() {
                 "Recommendation",
                 "Actions",
               ].map((heading) => (
-                <th key={heading} className="px-5 py-3 text-left font-medium">{heading}</th>
+                <th key={heading} className="px-5 py-3 text-left font-medium">
+                  {heading}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {predictions.map((row) => (
+            {filteredPredictions.map((row) => (
               <tr key={row.id} className="border-t border-farm-600/30">
-                <td className="px-5 py-3 font-medium">{row.tagNumber}</td>
-                <td className="px-5 py-3">{row.speciesName}</td>
-                <td className="px-5 py-3">{formatKg(row.currentWeightKg)}</td>
-                <td className="px-5 py-3">{formatNumber(row.averageDailyGainKg, " kg/day")}</td>
-                <td className="px-5 py-3">{formatMoney(Number(row.metadata.feed_cost_to_date ?? 0))}</td>
-                <td className="px-5 py-3">{formatMoney(row.currentMarketPrice)}/kg</td>
-                <td className="px-5 py-3">{row.bestWindowDays === 0 ? "Now" : `${row.bestWindowDays} days`}</td>
-                <td className="px-5 py-3">{formatMoney(row.expectedProfit)}</td>
-                <td className={`px-5 py-3 font-medium ${confidenceClass(row.confidenceLabel)}`}>{row.confidenceLabel}</td>
-                <td className="px-5 py-3">
-                  <span className={`rounded-full px-2 py-1 text-xs font-medium ${recommendationClass(row.recommendation)}`}>
+                <td className="px-3 py-2.5 font-medium">{row.tagNumber}</td>
+                <td className="px-3 py-2.5">{row.speciesName}</td>
+                <td className="px-3 py-2.5">{formatKg(row.currentWeightKg)}</td>
+                <td className="px-3 py-2.5">{formatNumber(row.averageDailyGainKg, " kg/day")}</td>
+                <td className="px-3 py-2.5">
+                  {formatMoney(Number(row.metadata.feed_cost_to_date ?? 0))}
+                </td>
+                <td className="px-3 py-2.5">{formatMoney(row.currentMarketPrice)}/kg</td>
+                <td className="px-3 py-2.5">
+                  {row.bestWindowDays === 0 ? "Now" : `${row.bestWindowDays} days`}
+                </td>
+                <td className="px-3 py-2.5">{formatMoney(row.expectedProfit)}</td>
+                <td className={`px-3 py-2.5 font-medium ${confidenceClass(row.confidenceLabel)}`}>
+                  {row.confidenceLabel}
+                </td>
+                <td className="px-3 py-2.5">
+                  <span
+                    className={`rounded-full px-2 py-1 text-xs font-medium ${recommendationClass(row.recommendation)}`}
+                  >
                     {recommendationLabel(row.recommendation)}
                   </span>
                 </td>
-                <td className="px-5 py-3">
+                <td className="px-3 py-2.5">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button type="button" size="icon" variant="ghost" aria-label="Prediction actions">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        aria-label="Prediction actions"
+                      >
                         <Menu className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -332,7 +662,9 @@ function PredictionsPage() {
                         View prediction
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => navigate({ to: "/animals/$id", params: { id: row.animalId } })}
+                        onClick={() =>
+                          navigate({ to: "/animals/$id", params: { id: row.animalId } })
+                        }
                       >
                         <UserRound className="mr-2 h-4 w-4" />
                         View animal
@@ -348,14 +680,19 @@ function PredictionsPage() {
             ))}
           </tbody>
         </table>
-        {!predictionsQuery.isLoading && predictions.length === 0 && (
+        {!predictionsQuery.isLoading && filteredPredictions.length === 0 && (
           <div className="p-5 text-sm text-farm-muted">
-            No stored selling predictions yet. Run predictions to create a snapshot.
+            {recommendationFilter === "ALL"
+              ? "No stored selling predictions yet. Run predictions to create a snapshot."
+              : `No animals in ${filterLabel(recommendationFilter)} right now.`}
           </div>
         )}
       </div>
 
-      <Dialog open={Boolean(detailPrediction)} onOpenChange={(open) => !open && setDetailPrediction(null)}>
+      <Dialog
+        open={Boolean(detailPrediction)}
+        onOpenChange={(open) => !open && setDetailPrediction(null)}
+      >
         <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Animal Prediction Detail</DialogTitle>
@@ -367,11 +704,16 @@ function PredictionsPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(salePrediction)} onOpenChange={(open) => !open && setSalePrediction(null)}>
+      <Dialog
+        open={Boolean(salePrediction)}
+        onOpenChange={(open) => !open && setSalePrediction(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Mark Animal as Sold</DialogTitle>
-            <DialogDescription>Create a sale record and update the animal status.</DialogDescription>
+            <DialogDescription>
+              Create a sale record and update the animal status.
+            </DialogDescription>
           </DialogHeader>
           {salePrediction && (
             <MarkSoldForm

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Download, Plus } from "lucide-react";
+import { Download, Plus, SlidersHorizontal } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useCurrentFarm } from "@/features/farm/hooks/useCurrentFarm";
 import { useAnimalSpecies } from "@/features/animals/hooks/useAnimalSpecies";
 import { useAnimals } from "@/features/animals/hooks/useAnimals";
@@ -107,6 +108,7 @@ function exportCsv(rows: SalesRecordViewModel[]) {
 
 function SalesRecordsPage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { currentFarm } = useCurrentFarm();
   const speciesQuery = useAnimalSpecies();
   const activeAnimalsQuery = useAnimals(currentFarm.id, { status: "active" });
@@ -118,6 +120,7 @@ function SalesRecordsPage() {
   const [detailSale, setDetailSale] = useState<SalesRecordViewModel | null>(null);
   const [voidSale, setVoidSale] = useState<SalesRecordViewModel | null>(null);
   const [voidReason, setVoidReason] = useState("");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const rows = salesQuery.data ?? [];
   const analytics = salesQuery.analytics;
@@ -172,19 +175,19 @@ function SalesRecordsPage() {
         title="Sales Records"
         description="Record sold animals, revenue, and profit outcomes."
         action={
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+          <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:flex sm:flex-row sm:flex-wrap">
             <Button
               type="button"
               variant="outline"
               onClick={() => exportCsv(rows)}
-              className="w-full sm:w-auto"
+              className="w-full"
             >
               <Download className="h-4 w-4" />
               Export Report
             </Button>
             <Button
               type="button"
-              className="w-full bg-farm-lime text-farm-950 hover:bg-farm-lime/90 sm:w-auto"
+              className="w-full bg-farm-lime text-farm-950 hover:bg-farm-lime/90"
               onClick={() => {
                 setEditingSale(null);
                 setFormOpen(true);
@@ -197,7 +200,21 @@ function SalesRecordsPage() {
         }
       />
 
-      <SalesFilters filters={filters} species={species} onChange={setFilters} />
+      {isMobile && (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full justify-center gap-2 border-farm-600/50 bg-farm-800/70 text-foreground hover:bg-farm-700/60"
+          onClick={() => setShowMobileFilters((current) => !current)}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          {showMobileFilters ? "Hide Filters" : "Show Filters"}
+        </Button>
+      )}
+
+      {(!isMobile || showMobileFilters) && (
+        <SalesFilters filters={filters} species={species} onChange={setFilters} />
+      )}
 
       {salesQuery.isError && (
         <div className="rounded-xl border border-farm-danger/40 bg-farm-danger/10 p-5 text-sm text-farm-danger">

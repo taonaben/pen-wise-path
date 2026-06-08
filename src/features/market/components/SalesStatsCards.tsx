@@ -10,7 +10,7 @@ type Props = {
 
 export function SalesStatsCards({ summary, currency = "USD" }: Props) {
   return (
-    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-6">
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 xl:grid-cols-6">
       <StatCard
         title="Total Sales Revenue"
         value={formatCurrency(summary.totalRevenue, currency)}
